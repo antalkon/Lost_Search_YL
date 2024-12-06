@@ -1,0 +1,37 @@
+services:
+  gateway-service:
+    build:
+      context: .
+    depends_on:
+      kafka:
+        condition: service_started
+    networks:
+      - default
+
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: kafka-container
+    env_file: config/local.env
+    environment:
+
+    ports:
+
+    networks:
+      - default
+
+
+  nginx:
+    image: nginx
+    container_name: nginx-container
+    ports:
+      - "80:80"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      gateway-service:
+        condition: service_started
+    networks:
+      - default
+
+networks:
+  default:
