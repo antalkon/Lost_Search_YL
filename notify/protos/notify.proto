@@ -1,4 +1,3 @@
-// protos/notify.proto
 syntax = "proto3";
 
 package protos;
