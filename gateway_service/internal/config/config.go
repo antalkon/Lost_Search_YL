@@ -17,7 +17,7 @@ type Config struct {
 func New(ctx context.Context) *Config {
 	cfg := &Config{}
 	log := logger.GetLogger(ctx)
-	err := cleanenv.ReadConfig("../../config/.env", cfg)
+	err := cleanenv.ReadEnv(cfg)
 	if err != nil {
 		log.Error(ctx, err.Error())
 	}

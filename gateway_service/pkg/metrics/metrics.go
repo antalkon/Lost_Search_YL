@@ -12,7 +12,7 @@ import (
 )
 
 type PrometheusConfig struct {
-	port int `env:"PROMETEUS_PORT" envDefault:"9090"`
+	port int `env:"PROMETHEUS_PORT" envDefault:"9090"`
 }
 
 type PrometheusServer struct {

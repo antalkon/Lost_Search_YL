@@ -2,6 +2,15 @@ services:
   gateway-service:
     build:
       context: .
+    env_file:
+      - .env
+    environment:
+      - REST_PORT=${REST_PORT}
+      - KAFKA_PORT=${KAFKA_PORT}
+      - PROMETHEUS_PORT=${PROMETHEUS_PORT}
+    ports:
+      - "${REST_PORT}:${REST_PORT}"
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
     depends_on:
       kafka:
         condition: service_started
@@ -11,20 +20,22 @@ services:
   kafka:
     image: apache/kafka:2.7.0
     container_name: kafka-container
-    env_file: ./config/.env
+    env_file: .env
     environment:
-
+      - KAFKA_PORT = ${KAFKA_PORT}
     ports:
-
+      - "${KAFKA_PORT}:${KAFKA_PORT}"
     networks:
       - default
 
   prometheus:
     image: quay.io/prometheus/prometheus:latest
-    ports:
-      -
+    env_file:
+      - .env
     volumes:
       - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    networks:
+      - default
 
 
   nginx:
