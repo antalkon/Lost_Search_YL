@@ -1,0 +1,8 @@
+.git
+node_modules
+*.log
+tmp/
+.env
+*.md
+Dockerfile
+docker-compose.ym
