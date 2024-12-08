@@ -9,15 +9,22 @@ services:
       - default
 
   kafka:
-    image: apache/kafka:3.9.0
+    image: apache/kafka:2.7.0
     container_name: kafka-container
-    env_file: config/local.env
+    env_file: ./config/.env
     environment:
 
     ports:
 
     networks:
       - default
+
+  prometheus:
+    image: quay.io/prometheus/prometheus:latest
+    ports:
+      -
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
 
 
   nginx:

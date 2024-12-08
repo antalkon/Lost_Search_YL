@@ -37,11 +37,9 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 func (s *Server) Stop(ctx context.Context) error {
-	log := logger.GetLogger(ctx)
 	err := s.serv.Shutdown(ctx)
 	if err != nil {
 		return err
 	}
-	log.Info(ctx, "Server stopped")
 	return nil
 }

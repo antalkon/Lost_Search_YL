@@ -1,5 +1,5 @@
 package kafka
 
-type Config struct {
+type BrokerConfig struct {
 	port int `env:"KAFKA_PORT" envDefault:"8080"`
 }
