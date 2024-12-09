@@ -26,3 +26,13 @@ func (p *Producer) SendMessage(ctx context.Context, msg string) error {
 	}
 	return nil
 }
+
+func (p *Producer) SearchAds(msg string) error {
+	err := p.writer.WriteMessages(context.Background(), kafka.Message{
+		Value: []byte(msg),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
