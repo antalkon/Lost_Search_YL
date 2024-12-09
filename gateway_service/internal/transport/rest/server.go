@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"fmt"
+	"gateway_service/internal/models"
 	"gateway_service/pkg/kafka"
 	"gateway_service/pkg/logger"
 	"github.com/google/uuid"
@@ -17,9 +18,9 @@ type Server struct {
 	repo       *kafka.BrokerRepo
 }
 
-func New(ctx context.Context, serverPort int) (*Server, error) {
+func New(ctx context.Context, serverPort int, repo *kafka.BrokerRepo) (*Server, error) {
 	e := echo.New()
-	return &Server{serverPort: serverPort, serv: e}, nil
+	return &Server{serverPort: serverPort, serv: e, repo: repo}, nil
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -28,7 +29,7 @@ func (s *Server) Start(ctx context.Context) error {
 	s.serv.POST("/v1/api/MakeAds", s.MakeAds)
 	s.serv.POST("/v1/api/ApplyAds", s.ApplyAds)
 	s.serv.POST("/v1/api/Login", s.Login)
-	s.serv.POST("/v1/api/Signin", s.Signin)
+	s.serv.POST("/v1/api/Register", s.Register)
 	err := s.serv.Start(fmt.Sprintf(":%d", s.serverPort))
 	if err != nil {
 		return err
@@ -46,17 +47,14 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 func (s *Server) SearchAds(ctx echo.Context) error {
-	//TODO jwt check
+	//TODO jwt check, notify call
 	id := uuid.New().String()
-	var data []byte
-	_, err := ctx.Request().Body.Read(data)
-	if err != nil {
-		return err
+
+	var data models.SearchRequest
+	if err := ctx.Bind(&data); err != nil {
+		return ctx.JSON(http.StatusBadRequest, err)
 	}
-	err = ctx.Request().Body.Close()
-	if err != nil {
-		return err
-	}
+
 	respose_ch, err := s.repo.SearchAds(id, string(data))
 	if err != nil {
 		return err
@@ -69,8 +67,7 @@ func (s *Server) SearchAds(ctx echo.Context) error {
 			return err
 		}
 	case <-time.After(5 * time.Second):
-		ctx.Response().Status = http.StatusGatewayTimeout
-		_, err = ctx.Response().Write([]byte("timeout"))
+		err = ctx.String(http.StatusGatewayTimeout, "timeout")
 		if err != nil {
 			return err
 		}
@@ -91,6 +88,6 @@ func (s *Server) Login(ctx echo.Context) error {
 	return nil
 }
 
-func (s *Server) Signin(ctx echo.Context) error {
+func (s *Server) Register(ctx echo.Context) error {
 	return nil
 }

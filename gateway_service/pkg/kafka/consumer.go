@@ -27,18 +27,21 @@ func NewConsumer(address string, groupid string, topic string, requests *map[str
 
 func (c *Consumer) Consume(ctx context.Context) error {
 	log := logger.GetLogger(ctx)
-	select {
-	case <-ctx.Done():
-		log.Info(ctx, "consumer stopped")
-	default:
-		msg, err := c.reader.ReadMessage(ctx)
-		if err != nil {
-			log.Error(ctx, "error", zap.String("Logging error", err.Error()))
-		} else {
-			// TODO get uuid from msg
-			uuid := string(msg.Value)
-			(*c.requests)[uuid] <- string(msg.Value)
+	for {
+		select {
+		case <-ctx.Done():
+			log.Info(ctx, "consumer stopped")
+			return nil
+		default:
+			msg, err := c.reader.ReadMessage(ctx)
+			if err != nil {
+				log.Error(ctx, "error", zap.String("Logging error", err.Error()))
+			} else {
+				// TODO get uuid from msg
+				uuid := string(msg.Value)
+				(*c.requests)[uuid] <- string(msg.Value)
+			}
 		}
 	}
-	return nil
+
 }
