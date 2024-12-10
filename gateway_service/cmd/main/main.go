@@ -6,6 +6,7 @@ import (
 	"gateway_service/internal/config"
 	"gateway_service/internal/transport/gateway"
 	"gateway_service/internal/transport/rest"
+	"gateway_service/pkg/kafka"
 	"gateway_service/pkg/logger"
 	"gateway_service/pkg/metrics"
 	"os"
@@ -21,7 +22,8 @@ func main() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logger.LoggerKey, logger.New(serviceName))
 	cfg := config.New(ctx)
-	restSrv, err := rest.New(ctx, cfg.RestServerPort)
+	repo := kafka.NewBrokerRepo(fmt.Sprintf("%v:%v", cfg.BrokerConfig.Host, cfg.BrokerConfig.Port))
+	restSrv, err := rest.New(ctx, cfg.RestServerPort, repo)
 	mainLogger := logger.GetLogger(ctx)
 
 	if err != nil || restSrv == nil {

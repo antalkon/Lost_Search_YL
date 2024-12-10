@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"gateway_service/internal/models"
 	"gateway_service/pkg/kafka"
@@ -54,8 +55,11 @@ func (s *Server) SearchAds(ctx echo.Context) error {
 	if err := ctx.Bind(&data); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
-
-	respose_ch, err := s.repo.SearchAds(id, string(data))
+	str, err := json.Marshal(data)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, err)
+	}
+	respose_ch, err := s.repo.SearchAds(id, string(str))
 	if err != nil {
 		return err
 	}

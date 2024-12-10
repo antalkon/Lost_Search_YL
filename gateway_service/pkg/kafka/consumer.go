@@ -2,21 +2,23 @@ package kafka
 
 import (
 	"context"
-	"gateway_service/pkg/logger"
+	"gateway_service/pkg/syncmap"
+	"github.com/labstack/gommon/log"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
 )
 
 type BrokerConfig struct {
-	port int `env:"KAFKA_PORT" envDefault:"8080"`
+	Host string `env:"KAFKA_HOST" envDefault:"kafka"`
+	Port int    `env:"KAFKA_PORT" envDefault:"8080"`
 }
 
 type Consumer struct {
 	reader   *kafka.Reader
-	requests *map[string]chan string
+	requests *syncmap.SyncMap
 }
 
-func NewConsumer(address string, groupid string, topic string, requests *map[string]chan string) *Consumer {
+func NewConsumer(address string, groupid string, topic string, requests *syncmap.SyncMap) *Consumer {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{address},
 		GroupID: groupid,
@@ -26,7 +28,6 @@ func NewConsumer(address string, groupid string, topic string, requests *map[str
 }
 
 func (c *Consumer) Consume(ctx context.Context) error {
-	log := logger.GetLogger(ctx)
 	for {
 		select {
 		case <-ctx.Done():
@@ -39,7 +40,11 @@ func (c *Consumer) Consume(ctx context.Context) error {
 			} else {
 				// TODO get uuid from msg
 				uuid := string(msg.Value)
-				(*c.requests)[uuid] <- string(msg.Value)
+				ch, ok := c.requests.Read(uuid)
+				if !ok {
+					continue
+				}
+				ch <- uuid
 			}
 		}
 	}
