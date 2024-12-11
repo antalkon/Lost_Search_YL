@@ -22,7 +22,7 @@ func main() {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, logger.LoggerKey, logger.New(serviceName))
 	cfg := config.New(ctx)
-	repo := kafka.NewBrokerRepo(fmt.Sprintf("%v:%v", cfg.BrokerConfig.Host, cfg.BrokerConfig.Port))
+	repo := kafka.NewBrokerRepo(ctx, fmt.Sprintf("%v:%v", cfg.BrokerConfig.Host, cfg.BrokerConfig.Port))
 	restSrv, err := rest.New(ctx, cfg.RestServerPort, repo)
 	mainLogger := logger.GetLogger(ctx)
 
