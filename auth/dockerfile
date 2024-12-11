@@ -1,0 +1,21 @@
+FROM golang:alpine AS build
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+COPY . .
+
+RUN go build -o main cmd/app/main.go
+
+FROM alpine
+
+COPY config ./config
+
+COPY --from=build /app/main ./
+
+EXPOSE 8080
+
+CMD ["./main"]

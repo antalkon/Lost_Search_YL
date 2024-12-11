@@ -26,11 +26,11 @@ type AuthServiceConfig struct {
 }
 
 type AuthService struct {
-	Config   *AuthServiceConfig
+	Config   AuthServiceConfig
 	AuthRepo AuthRepoInterface
 }
 
-func NewAuthService(config *AuthServiceConfig, authRepo AuthRepoInterface) *AuthService {
+func NewAuthService(config AuthServiceConfig, authRepo AuthRepoInterface) *AuthService {
 	return &AuthService{
 		Config:   config,
 		AuthRepo: authRepo,
@@ -111,4 +111,33 @@ func (as *AuthService) IsTokenValid(tokenString string) bool {
 	}
 
 	return token.Valid
+}
+
+// получение данных пользователя
+func (as *AuthService) GetUserData(ctx context.Context, login string) (string, error) {
+	u, err := as.AuthRepo.GetUser(ctx, login)
+	if err != nil {
+		return "", err
+	}
+	return u.Data, nil
+}
+
+// обновление данных пользователя
+func (as *AuthService) UpdateUserData(ctx context.Context, login string, data string) (string, error) {
+	tmp, err := as.AuthRepo.GetUser(ctx, login)
+	if err != nil {
+		return "", err
+	}
+
+	p := tmp.Password
+
+	u, err := as.AuthRepo.UpdateUser(ctx, userrepo.User{
+		Login:    login,
+		Password: p,
+		Data:     data,
+	})
+	if err != nil {
+		return "", err
+	}
+	return u.Data, nil
 }
