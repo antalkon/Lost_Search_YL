@@ -1,19 +1,16 @@
-FROM golang:1.22 AS builder
+FROM golang:1.23 AS builder
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
-RUN go mod tidy
+
+RUN go mod download
 
 COPY . .
-RUN go build -o search-service ./cmd/app/main.go
 
-FROM gcr.io/distroless/base-debian11
-WORKDIR /app
+RUN go build -o search_service ./cmd/app/main.go
 
-COPY --from=builder /app/search-service /app/search-service
+EXPOSE 9090 8080
 
-COPY .env .env
-RUN ls -la .env || echo "File .env not found"
 
-EXPOSE 8080
-CMD ["/app/search-service"]
+CMD ["./search_service"]

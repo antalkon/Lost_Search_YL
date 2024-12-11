@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: on-failure
+
+  redis:
+    image: redis:7
+    container_name: redis_container
+    ports:
+      - "6060:6060"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build: .
+    ports:
+      - "50051:50051"
+      - "8080:8080"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - REDIS_HOST=redis
+      - REDIS_PORT=6060
+      - KAFKA_BROKER=localhost:9091
+      - KAFKA_REQUESTS_TOPIC=requests
+      - KAFKA_NOTIFY_RESPONSES_TOPIC=search-responses
+      - NOTIFY_SERVICE_NAME=search
+
+    depends_on:
+      - postgres
+      - redis
+
+
+volumes:
+  postgres_data:
+  redis_data:

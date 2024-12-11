@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"gitlab.crja72.ru/gospec/go21/go_final_project/config"
 	"gitlab.crja72.ru/gospec/go21/go_final_project/internal/handler"
@@ -15,10 +18,14 @@ func main() {
 
 	cfg := config.LoadConfig()
 
+	log.Println(cfg.DbName, cfg.Host, cfg.Port)
 	repo, err := repository.NewPostgresRepo(cfg.Config)
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -44,4 +51,10 @@ func main() {
 			log.Fatalf("Error consuming messages: %v", err)
 		}
 	}()
+
+	<-signalChan
+	log.Warn("Received termination signal. Shutting down...")
+	cancel()
+
+	log.Info("Search Service stopped gracefully.")
 }

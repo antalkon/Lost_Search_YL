@@ -42,7 +42,7 @@ func (t *TestRepo) GetFind() {
 func TestHandleAdd_Success(t *testing.T) {
 	repo := &TestRepo{}
 	writer := &TestKafkaWriter{}
-	msgData := `{"name": "телефон", "description": "маленький", "type": "техника", "location": ["Россия", "Иваново", "пр.Фрунцзе"]}}`
+	msgData := `{"name": "телефон", "description": "маленький", "type": "техника", "location": ["Россия", "Иваново", "пр.Фрунцзе"]}`
 	message := []byte(messageMarkup(ActionAdd, msgData))
 
 	err := HandleRequest(writer, repo, message)

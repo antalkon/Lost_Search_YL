@@ -25,5 +25,6 @@ func LoadConfig() *Config {
 		KafkaBroker:          os.Getenv("KAFKA_BROKER"),
 		RequestsTopic:        os.Getenv("KAFKA_REQUESTS_TOPIC"),
 		NotifyResponsesTopic: os.Getenv("KAFKA_NOTIFY_RESPONSES_TOPIC"), // Новое поле
+		Config:               postgres.LoadConfig(),
 	}
 }
