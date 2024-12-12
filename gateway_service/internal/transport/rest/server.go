@@ -2,6 +2,7 @@ package rest
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"gateway_service/internal/models"
 	"gateway_service/pkg/kafka"
@@ -48,9 +49,24 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 func (s *Server) SearchAds(ctx echo.Context) error {
-	//TODO jwt check
+	token := ctx.Request().Header.Get("Authorization")
+	if token == "" {
+		_ = ctx.String(http.StatusUnauthorized, "Authorization header required")
+		return nil
+	}
+	// Validate Token
 	id := uuid.New().String()
-
+	ch, err := s.repo.ValidateToken(id, token)
+	if err != nil {
+		_ = ctx.String(http.StatusBadGateway, err.Error())
+		return nil
+	}
+	select {
+	case resp := <-ch:
+		var data models.KafkaResponse
+		_ = json.Unmarshal(resp, &data)
+		//TODO
+	}
 	var data models.SearchRequest
 	if err := ctx.Bind(&data); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)

@@ -41,7 +41,7 @@ func (c *Consumer) Consume(ctx context.Context) error {
 			} else {
 				// TODO get uuid from msg
 				uuid := string(msg.Key)
-				ch, ok := c.requests.Read(string(msg.Value))
+				ch, ok := c.requests.Read(msg.Value)
 				if !ok {
 					continue
 				}

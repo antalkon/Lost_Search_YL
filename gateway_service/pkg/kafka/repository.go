@@ -48,8 +48,8 @@ func NewBrokerRepo(c context.Context, address string) *BrokerRepo {
 	return repo
 }
 
-func (b *BrokerRepo) SearchAds(uuid string, name string, typ string, location string) (chan string, error) {
-	ch := make(chan string)
+func (b *BrokerRepo) SearchAds(uuid string, name string, typ string, location models.Location) (chan []byte, error) {
+	ch := make(chan []byte)
 	b.requests.Write(uuid, ch)
 	req := models.SearchRequest{
 		Name:          name,
@@ -77,8 +77,8 @@ func (b *BrokerRepo) SearchAds(uuid string, name string, typ string, location st
 	return ch, nil
 }
 
-func (b *BrokerRepo) MakeAds(uuid string, name string, description string, typ string, geo string) (chan string, error) {
-	ch := make(chan string)
+func (b *BrokerRepo) MakeAds(uuid string, name string, description string, typ string, geo models.Location) (chan []byte, error) {
+	ch := make(chan []byte)
 	b.requests.Write(uuid, ch)
 	req := models.MakeAdsRequest{
 		Name:          name,
@@ -107,8 +107,8 @@ func (b *BrokerRepo) MakeAds(uuid string, name string, description string, typ s
 	return ch, nil
 }
 
-func (b *BrokerRepo) ApplyAds(uuid string, findUuid string) (chan string, error) {
-	ch := make(chan string)
+func (b *BrokerRepo) ApplyAds(uuid string, findUuid string) (chan []byte, error) {
+	ch := make(chan []byte)
 	b.requests.Write(uuid, ch)
 	req := models.ApplyRequest{
 		Uuid: findUuid,
@@ -134,8 +134,8 @@ func (b *BrokerRepo) ApplyAds(uuid string, findUuid string) (chan string, error)
 	return ch, nil
 }
 
-func (b *BrokerRepo) Register(uuid string, login, password, email string) (chan string, error) {
-	ch := make(chan string)
+func (b *BrokerRepo) Register(uuid string, login, password, email string) (chan []byte, error) {
+	ch := make(chan []byte)
 	b.requests.Write(uuid, ch)
 	req := models.RegisterRequest{
 		Login:    login,
@@ -163,8 +163,8 @@ func (b *BrokerRepo) Register(uuid string, login, password, email string) (chan 
 	return ch, nil
 }
 
-func (b *BrokerRepo) Login(uuid string, login, password string) (chan string, error) {
-	ch := make(chan string)
+func (b *BrokerRepo) Login(uuid string, login, password string) (chan []byte, error) {
+	ch := make(chan []byte)
 	b.requests.Write(uuid, ch)
 	req := models.LoginRequest{
 		Login:    login,
@@ -191,8 +191,35 @@ func (b *BrokerRepo) Login(uuid string, login, password string) (chan string, er
 	return ch, nil
 }
 
-func (b *BrokerRepo) NotifyUser(uuid string, email, subject, body string) (chan string, error) {
-	ch := make(chan string)
+func (b *BrokerRepo) ValidateToken(uuid string, token string) (chan []byte, error) {
+	ch := make(chan []byte)
+	b.requests.Write(uuid, ch)
+	req := models.ValidateTokenRequest{
+		Token: token,
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	kafkaReq := models.KafkaRequest{
+		RequestId: uuid,
+		Service:   "Auth",
+		Action:    "validate_token",
+		Data:      string(data),
+	}
+	data, err = json.Marshal(kafkaReq)
+	if err != nil {
+		return nil, err
+	}
+	err = b.producer["Auth"].SendMessage(b.ctx, uuid, string(data))
+	if err != nil {
+		return nil, err
+	}
+	return ch, nil
+}
+
+func (b *BrokerRepo) NotifyUser(uuid string, email, subject, body string) (chan []byte, error) {
+	ch := make(chan []byte)
 	b.requests.Write(uuid, ch)
 	req := models.NotifyRequest{
 		Email:   email,

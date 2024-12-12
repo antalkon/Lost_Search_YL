@@ -4,20 +4,20 @@ import "sync"
 
 type SyncMap struct {
 	mutex *sync.Mutex
-	data  map[string]chan string
+	data  map[string]chan []byte
 }
 
 func NewSyncMap() *SyncMap {
-	return &SyncMap{mutex: &sync.Mutex{}, data: make(map[string]chan string)}
+	return &SyncMap{mutex: &sync.Mutex{}, data: make(map[string]chan []byte)}
 }
 
-func (sm *SyncMap) Write(key string, value chan string) {
+func (sm *SyncMap) Write(key string, value chan []byte) {
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
 	sm.data[key] = value
 }
 
-func (sm *SyncMap) Read(key string) (chan string, bool) {
+func (sm *SyncMap) Read(key string) (chan []byte, bool) {
 	sm.mutex.Lock()
 	defer sm.mutex.Unlock()
 	value, ok := sm.data[key]

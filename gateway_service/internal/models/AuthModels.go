@@ -11,3 +11,7 @@ type LoginRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
+
+type ValidateTokenRequest struct {
+	Token string `json:"token"`
+}
