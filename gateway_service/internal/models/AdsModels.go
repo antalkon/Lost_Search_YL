@@ -1,1 +1,67 @@
 package models
+
+// WILL BE CHANGED NOT FINAL VARIANT
+
+type Location struct {
+	Country  string `json:"country"`
+	City     string `json:"city"`
+	District string `json:"district"`
+}
+
+type SearchRequest struct {
+	Name          string   `json:"name"`
+	TypeOfFinding string   `json:"type"`
+	Location      Location `json:"location"`
+}
+
+type Finding struct {
+	Name string
+}
+
+type SearchResponse struct {
+	Findings []Finding
+}
+
+type SearchKafkaResponse struct {
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`
+	Location    Location `json:"location"`
+	Description string   `json:"description"`
+	Uuid        string   `json:"uuid"`
+}
+
+type MakeAdsRequest struct {
+	Name          string   `json:"name"`
+	Description   string   `json:"description"`
+	TypeOfFinding string   `json:"type"`
+	Location      Location `json:"location"`
+}
+
+type MakeAdsResponse struct {
+	Success bool   `json:"success"`
+	Uuid    string `json:"uuid"`
+}
+
+type MakeAdsKafkaRequest struct {
+	Name string `json:"name"`
+}
+
+type MakeAdsKafkaResponse struct {
+	Success bool `json:"success"`
+}
+
+type ApplyRequest struct {
+	Uuid string `json:"uuid"`
+}
+
+type ApplyResponse struct {
+	Uuid string `json:"uuid"`
+}
+
+type ApplyKafkaRequest struct {
+	Uuid string `json:"uuid"`
+}
+
+type ApplyKafkaResponse struct {
+	Uuid string `json:"uuid"`
+}

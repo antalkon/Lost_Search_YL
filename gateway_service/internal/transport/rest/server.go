@@ -2,7 +2,6 @@ package rest
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"gateway_service/internal/models"
 	"gateway_service/pkg/kafka"
@@ -44,28 +43,25 @@ func (s *Server) Stop(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	s.repo.Stop()
 	return nil
 }
 
 func (s *Server) SearchAds(ctx echo.Context) error {
-	//TODO jwt check, notify call
+	//TODO jwt check
 	id := uuid.New().String()
 
 	var data models.SearchRequest
 	if err := ctx.Bind(&data); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
-	str, err := json.Marshal(data)
-	if err != nil {
-		return ctx.JSON(http.StatusBadRequest, err)
-	}
-	respose_ch, err := s.repo.SearchAds(id, string(str))
+	resposeCh, err := s.repo.SearchAds(id, data.Name, data.TypeOfFinding, data.Location)
 	if err != nil {
 		return err
 	}
 
 	select {
-	case respose := <-respose_ch:
+	case respose := <-resposeCh: //Remake
 		_, err = ctx.Response().Write([]byte(respose))
 		if err != nil {
 			return err

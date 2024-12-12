@@ -2,6 +2,8 @@ package kafka
 
 import (
 	"context"
+	"encoding/json"
+	"gateway_service/internal/models"
 	"gateway_service/pkg/syncmap"
 )
 
@@ -13,8 +15,8 @@ type BrokerRepo struct {
 	stop     context.CancelFunc
 }
 
-func NewBrokerRepo(address string) *BrokerRepo {
-	ctx, cancel := context.WithCancel(context.Background())
+func NewBrokerRepo(c context.Context, address string) *BrokerRepo {
+	ctx, cancel := context.WithCancel(c)
 	repo := &BrokerRepo{requests: syncmap.NewSyncMap(), ctx: ctx, stop: cancel}
 	var producers = make(map[string]*Producer)
 	var err error
@@ -46,60 +48,172 @@ func NewBrokerRepo(address string) *BrokerRepo {
 	return repo
 }
 
-func (b *BrokerRepo) SearchAds(uuid string, data string) (chan string, error) {
+func (b *BrokerRepo) SearchAds(uuid string, name string, typ string, location string) (chan string, error) {
 	ch := make(chan string)
 	b.requests.Write(uuid, ch)
-	err := b.producer["Ads"].SendMessage(b.ctx, uuid, data)
+	req := models.SearchRequest{
+		Name:          name,
+		TypeOfFinding: typ,
+		Location:      location,
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	kafkaReq := models.KafkaRequest{
+		RequestId: uuid,
+		Service:   "Ads",
+		Action:    "get",
+		Data:      string(data),
+	}
+	data, err = json.Marshal(kafkaReq)
+	if err != nil {
+		return nil, err
+	}
+	err = b.producer["Ads"].SendMessage(b.ctx, uuid, string(data))
 	if err != nil {
 		return nil, err
 	}
 	return ch, nil
 }
 
-func (b *BrokerRepo) MakeAds(uuid string, data string) (chan string, error) {
+func (b *BrokerRepo) MakeAds(uuid string, name string, description string, typ string, geo string) (chan string, error) {
 	ch := make(chan string)
 	b.requests.Write(uuid, ch)
-	err := b.producer["Ads"].SendMessage(b.ctx, uuid, data)
+	req := models.MakeAdsRequest{
+		Name:          name,
+		Description:   description,
+		TypeOfFinding: typ,
+		Location:      geo,
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	kafkaReq := models.KafkaRequest{
+		RequestId: uuid,
+		Service:   "Ads",
+		Action:    "add",
+		Data:      string(data),
+	}
+	data, err = json.Marshal(kafkaReq)
+	if err != nil {
+		return nil, err
+	}
+	err = b.producer["Ads"].SendMessage(b.ctx, uuid, string(data))
 	if err != nil {
 		return nil, err
 	}
 	return ch, nil
 }
 
-func (b *BrokerRepo) ApplyAds(uuid string, data string) (chan string, error) {
+func (b *BrokerRepo) ApplyAds(uuid string, findUuid string) (chan string, error) {
 	ch := make(chan string)
 	b.requests.Write(uuid, ch)
-	err := b.producer["Ads"].SendMessage(b.ctx, uuid, data)
+	req := models.ApplyRequest{
+		Uuid: findUuid,
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	kafkaReq := models.KafkaRequest{
+		RequestId: uuid,
+		Service:   "Ads",
+		Action:    "respond",
+		Data:      string(data),
+	}
+	data, err = json.Marshal(kafkaReq)
+	if err != nil {
+		return nil, err
+	}
+	err = b.producer["Ads"].SendMessage(b.ctx, uuid, string(data))
 	if err != nil {
 		return nil, err
 	}
 	return ch, nil
 }
 
-func (b *BrokerRepo) Login(uuid string, data string) (chan string, error) {
+func (b *BrokerRepo) Register(uuid string, login, password, email string) (chan string, error) {
 	ch := make(chan string)
 	b.requests.Write(uuid, ch)
-	err := b.producer["Auth"].SendMessage(b.ctx, uuid, data)
+	req := models.RegisterRequest{
+		Login:    login,
+		Password: password,
+		Email:    email,
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	kafkaReq := models.KafkaRequest{
+		RequestId: uuid,
+		Service:   "Auth",
+		Action:    "create_user",
+		Data:      string(data),
+	}
+	data, err = json.Marshal(kafkaReq)
+	if err != nil {
+		return nil, err
+	}
+	err = b.producer["Auth"].SendMessage(b.ctx, uuid, string(data))
 	if err != nil {
 		return nil, err
 	}
 	return ch, nil
 }
 
-func (b *BrokerRepo) Register(uuid string, data string) (chan string, error) {
+func (b *BrokerRepo) Login(uuid string, login, password string) (chan string, error) {
 	ch := make(chan string)
 	b.requests.Write(uuid, ch)
-	err := b.producer["Ads"].SendMessage(b.ctx, uuid, data)
+	req := models.LoginRequest{
+		Login:    login,
+		Password: password,
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	kafkaReq := models.KafkaRequest{
+		RequestId: uuid,
+		Service:   "Auth",
+		Action:    "login_user",
+		Data:      string(data),
+	}
+	data, err = json.Marshal(kafkaReq)
+	if err != nil {
+		return nil, err
+	}
+	err = b.producer["Auth"].SendMessage(b.ctx, uuid, string(data))
 	if err != nil {
 		return nil, err
 	}
 	return ch, nil
 }
 
-func (b *BrokerRepo) NotifyUser(uuid string, data string) (chan string, error) {
+func (b *BrokerRepo) NotifyUser(uuid string, email, subject, body string) (chan string, error) {
 	ch := make(chan string)
 	b.requests.Write(uuid, ch)
-	err := b.producer["Auth"].SendMessage(b.ctx, uuid, data)
+	req := models.NotifyRequest{
+		Email:   email,
+		Subject: subject,
+		Body:    body,
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	kafkaReq := models.KafkaRequest{
+		RequestId: uuid,
+		Service:   "Notify",
+		Action:    "send_email",
+		Data:      string(data),
+	}
+	data, err = json.Marshal(kafkaReq)
+	if err != nil {
+		return nil, err
+	}
+	err = b.producer["Notify"].SendMessage(b.ctx, uuid, string(data))
 	if err != nil {
 		return nil, err
 	}

@@ -2,8 +2,8 @@ package kafka
 
 import (
 	"context"
+	"gateway_service/pkg/logger"
 	"gateway_service/pkg/syncmap"
-	"github.com/labstack/gommon/log"
 	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
 )
@@ -28,6 +28,7 @@ func NewConsumer(address string, groupid string, topic string, requests *syncmap
 }
 
 func (c *Consumer) Consume(ctx context.Context) error {
+	log := logger.GetLogger(ctx)
 	for {
 		select {
 		case <-ctx.Done():
@@ -39,11 +40,12 @@ func (c *Consumer) Consume(ctx context.Context) error {
 				log.Error(ctx, "error", zap.String("Logging error", err.Error()))
 			} else {
 				// TODO get uuid from msg
-				uuid := string(msg.Value)
-				ch, ok := c.requests.Read(uuid)
+				uuid := string(msg.Key)
+				ch, ok := c.requests.Read(string(msg.Value))
 				if !ok {
 					continue
 				}
+				c.requests.Delete(uuid)
 				ch <- uuid
 			}
 		}
