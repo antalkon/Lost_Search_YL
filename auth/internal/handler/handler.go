@@ -93,6 +93,7 @@ func formResponse(reqID string, data map[string]any, err error) ([]byte, error) 
 	if err == nil {
 		status = StatusSuccess
 	} else {
+		data = map[string]any{"error": err.Error()}
 		status = StatusFailed
 	}
 
