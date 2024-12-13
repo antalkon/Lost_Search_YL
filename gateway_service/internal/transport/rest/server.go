@@ -49,61 +49,259 @@ func (s *Server) Stop(ctx context.Context) error {
 }
 
 func (s *Server) SearchAds(ctx echo.Context) error {
-	token := ctx.Request().Header.Get("Authorization")
-	if token == "" {
-		_ = ctx.String(http.StatusUnauthorized, "Authorization header required")
+	valid := s.VerifyToken(ctx)
+	if !valid {
 		return nil
 	}
-	// Validate Token
-	id := uuid.New().String()
-	ch, err := s.repo.ValidateToken(id, token)
-	if err != nil {
-		_ = ctx.String(http.StatusBadGateway, err.Error())
-		return nil
-	}
-	select {
-	case resp := <-ch:
-		var data models.KafkaResponse
-		_ = json.Unmarshal(resp, &data)
-		//TODO
-	}
+
 	var data models.SearchRequest
 	if err := ctx.Bind(&data); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
-	resposeCh, err := s.repo.SearchAds(id, data.Name, data.TypeOfFinding, data.Location)
-	if err != nil {
-		return err
-	}
-
-	select {
-	case respose := <-resposeCh: //Remake
-		_, err = ctx.Response().Write([]byte(respose))
-		if err != nil {
-			return err
+	for i := range 6 {
+		if i == 5 {
+			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
 		}
-	case <-time.After(5 * time.Second):
-		err = ctx.String(http.StatusGatewayTimeout, "timeout")
+		id := uuid.New().String()
+		ch, err := s.repo.SearchAds(id, data.Name, data.TypeOfFinding, data.Location)
 		if err != nil {
-			return err
+			return ctx.String(http.StatusInternalServerError, err.Error())
+		}
+
+		select {
+		case response := <-ch:
+			var respData models.KafkaResponse
+			err = json.Unmarshal(response, &respData)
+			if err != nil {
+				return ctx.String(http.StatusBadGateway, err.Error())
+			}
+			if respData.Status != "success" {
+				continue
+			}
+			var searchData models.SearchResponse
+			err = json.Unmarshal([]byte(respData.Data), &searchData)
+			if err != nil {
+				return ctx.String(http.StatusInternalServerError, err.Error())
+			}
+			_ = ctx.JSON(http.StatusOK, searchData)
+			break
+		case <-time.After(5 * time.Second):
+			continue
 		}
 	}
-
 	return nil
 }
 
 func (s *Server) MakeAds(ctx echo.Context) error {
+	valid := s.VerifyToken(ctx)
+	if !valid {
+		return nil
+	}
+
+	var data models.MakeAdsRequest
+	if err := ctx.Bind(&data); err != nil {
+		return ctx.JSON(http.StatusBadRequest, err)
+	}
+	for i := range 6 {
+		if i == 5 {
+			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
+		}
+		id := uuid.New().String()
+		ch, err := s.repo.MakeAds(id, data.Name, data.Description, data.TypeOfFinding, data.Location)
+		if err != nil {
+			return ctx.String(http.StatusInternalServerError, err.Error())
+		}
+
+		select {
+		case response := <-ch:
+			var respData models.KafkaResponse
+			err = json.Unmarshal(response, &respData)
+			if err != nil {
+				return ctx.String(http.StatusBadGateway, err.Error())
+			}
+			if respData.Status != "success" {
+				continue
+			}
+			var makeData models.MakeAdsResponse
+			err = json.Unmarshal([]byte(respData.Data), &makeData)
+			if err != nil {
+				return ctx.String(http.StatusInternalServerError, err.Error())
+			}
+			_ = ctx.JSON(http.StatusOK, makeData)
+			break
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
 	return nil
 }
 
 func (s *Server) ApplyAds(ctx echo.Context) error {
+	valid := s.VerifyToken(ctx)
+	if !valid {
+		return nil
+	}
+
+	var data models.ApplyRequest
+	if err := ctx.Bind(&data); err != nil {
+		return ctx.JSON(http.StatusBadRequest, err)
+	}
+	for i := range 6 {
+		if i == 5 {
+			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
+		}
+		id := uuid.New().String()
+		ch, err := s.repo.ApplyAds(id, data.Uuid)
+		if err != nil {
+			return ctx.String(http.StatusInternalServerError, err.Error())
+		}
+
+		select {
+		case response := <-ch:
+			var respData models.KafkaResponse
+			err = json.Unmarshal(response, &respData)
+			if err != nil {
+				return ctx.String(http.StatusBadGateway, err.Error())
+			}
+			if respData.Status != "success" {
+				continue
+			}
+			var applyData models.ApplyResponse
+			err = json.Unmarshal([]byte(respData.Data), &applyData)
+			if err != nil {
+				return ctx.String(http.StatusInternalServerError, err.Error())
+			}
+			_ = ctx.JSON(http.StatusOK, applyData)
+			//TODO notify
+			break
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
 	return nil
 }
 
 func (s *Server) Login(ctx echo.Context) error {
+	var data models.LoginRequest
+	if err := ctx.Bind(&data); err != nil {
+		return ctx.JSON(http.StatusBadRequest, err)
+	}
+	for i := range 6 {
+		if i == 5 {
+			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
+		}
+		id := uuid.New().String()
+		ch, err := s.repo.Login(id, data.Login, data.Password)
+		if err != nil {
+			return ctx.String(http.StatusInternalServerError, err.Error())
+		}
+
+		select {
+		case response := <-ch:
+			var respData models.KafkaResponse
+			err = json.Unmarshal(response, &respData)
+			if err != nil {
+				return ctx.String(http.StatusBadGateway, err.Error())
+			}
+			if respData.Status != "success" {
+				continue
+			}
+			var loginData models.LoginKafkaResponse
+			err = json.Unmarshal([]byte(respData.Data), &loginData)
+			if err != nil {
+				return ctx.String(http.StatusInternalServerError, err.Error())
+			}
+			ctx.Response().Header().Add("Authorization", "Bearer "+loginData.Token)
+			_ = ctx.JSON(http.StatusOK, models.LoginResponse{Success: true})
+			break
+
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
 	return nil
 }
 
 func (s *Server) Register(ctx echo.Context) error {
+	var data models.RegisterRequest
+	if err := ctx.Bind(&data); err != nil {
+		return ctx.JSON(http.StatusBadRequest, err)
+	}
+	for i := range 6 {
+		if i == 5 {
+			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
+		}
+		id := uuid.New().String()
+		ch, err := s.repo.Register(id, data.Login, data.Password, data.Email)
+		if err != nil {
+			return ctx.String(http.StatusInternalServerError, err.Error())
+		}
+
+		select {
+		case response := <-ch:
+			var respData models.KafkaResponse
+			err = json.Unmarshal(response, &respData)
+			if err != nil {
+				return ctx.String(http.StatusBadGateway, err.Error())
+			}
+			if respData.Status != "success" {
+				continue
+			}
+			var regData models.RegisterKafkaResponse
+			err = json.Unmarshal([]byte(respData.Data), &regData)
+			if err != nil {
+				return ctx.String(http.StatusInternalServerError, err.Error())
+			}
+			ctx.Response().Header().Add("Authorization", "Bearer "+regData.Token)
+			_ = ctx.JSON(http.StatusOK, models.RegisterResponse{Success: true})
+			break
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
 	return nil
+}
+
+func (s *Server) VerifyToken(ctx echo.Context) bool {
+	token := ctx.Request().Header.Get("Authorization")
+	if token == "" {
+		_ = ctx.String(http.StatusUnauthorized, "Authorization header required")
+		return false
+	}
+	// Validate Token
+	for i := range 6 {
+		if i == 5 {
+			_ = ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
+			return false
+		}
+		id := uuid.New().String()
+		ch, err := s.repo.ValidateToken(id, token)
+		if err != nil {
+			_ = ctx.String(http.StatusBadGateway, err.Error())
+			return false
+		}
+		select {
+		case resp := <-ch:
+			var data models.KafkaResponse
+			_ = json.Unmarshal(resp, &data)
+			if data.Status != "success" {
+				continue
+			}
+			var tokData models.ValidateTokenResponse
+			_ = json.Unmarshal([]byte(data.Data), &tokData)
+			valid := tokData.Valid
+			if !valid {
+				_ = ctx.String(http.StatusUnauthorized, "Invalid token")
+				return false
+			}
+			break
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
+	return true
+}
+
+func (s *Server) Notify(email string) bool {
+	//notify
 }

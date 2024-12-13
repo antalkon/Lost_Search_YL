@@ -19,7 +19,7 @@ type Finding struct {
 }
 
 type SearchResponse struct {
-	Findings []Finding
+	Finds []Finding `json:"finds"`
 }
 
 type SearchKafkaResponse struct {
@@ -38,8 +38,7 @@ type MakeAdsRequest struct {
 }
 
 type MakeAdsResponse struct {
-	Success bool   `json:"success"`
-	Uuid    string `json:"uuid"`
+	Uuid string `json:"uuid"`
 }
 
 type MakeAdsKafkaRequest struct {
