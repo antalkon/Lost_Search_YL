@@ -11,11 +11,12 @@ import (
 const ServiceAuth = "auth"
 
 const (
-	ActionCreateUser     = "create_user"
-	ActionLoginUser      = "login_user"
-	ActionValidateToken  = "validate_token"
-	ActionGetUserData    = "get_user_data"
-	ActionUpdateUserData = "update_user_data"
+	ActionCreateUser      = "create_user"
+	ActionLoginUser       = "login_user"
+	ActionValidateToken   = "validate_token"
+	ActionGetUserData     = "get_user_data"
+	ActionUpdateUserData  = "update_user_data"
+	ActionGetLoginByToken = "get_login_by_token"
 )
 
 const (
@@ -36,7 +37,8 @@ type AuthServiceInterface interface {
 	LoginUser(ctx context.Context, login string, password string) (string, error)
 	IsTokenValid(tokenString string) bool
 	GetUserData(ctx context.Context, login string) (string, error)
-	UpdateUserData(ctx context.Context, login string, data string) (string, error)
+	UpdateUserData(ctx context.Context, tokenString string, data string) (string, error)
+	GetLoginByToken(ctx context.Context, tokenString string) (string, error)
 }
 
 func HandleRequest(ctx context.Context, writer kafka.KafkaWriter,
@@ -65,6 +67,8 @@ func HandleRequest(ctx context.Context, writer kafka.KafkaWriter,
 		data, err = getUserDataHandler(ctx, req.Data, authService)
 	case ActionUpdateUserData:
 		data, err = updateUserDataHandler(ctx, req.Data, authService)
+	case ActionGetLoginByToken:
+		data, err = getLoginByTokenHandler(ctx, req.Data, authService)
 	default:
 		err = fmt.Errorf("unknown action: %s", req.Action)
 	}

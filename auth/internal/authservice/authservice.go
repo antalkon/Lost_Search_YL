@@ -122,6 +122,23 @@ func (as *AuthService) GetUserData(ctx context.Context, login string) (string, e
 	return u.Data, nil
 }
 
+// получение логина по токену
+func (as *AuthService) GetLoginByToken(ctx context.Context, tokenString string) (string, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(as.Config.TokenSigningKey), nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if !token.Valid {
+		return "", ErrInvalidToken
+	}
+
+	return token.Claims.(jwt.MapClaims)["sub"].(string), nil
+}
+
 // обновление данных пользователя
 var ErrInvalidToken = fmt.Errorf("invalid token")
 

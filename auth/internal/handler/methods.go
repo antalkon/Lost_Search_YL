@@ -9,7 +9,7 @@ import (
 type createUser struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
-	Data     string `json:"data"`
+	Data     string `json:"email"`
 }
 
 func createUserHandler(ctx context.Context, data map[string]any, as AuthServiceInterface) (map[string]any, error) {
@@ -66,12 +66,12 @@ func getUserDataHandler(ctx context.Context, data map[string]any, as AuthService
 	if err != nil {
 		return nil, err
 	}
-	return map[string]any{"data": u_data}, nil
+	return map[string]any{"email": u_data}, nil
 }
 
 type updateUserData struct {
-	Login string `json:"login"`
-	Data  string `json:"data"`
+	Token string `json:"token"`
+	Data  string `json:"email"`
 }
 
 func updateUserDataHandler(ctx context.Context, data map[string]any, as AuthServiceInterface) (map[string]any, error) {
@@ -79,9 +79,25 @@ func updateUserDataHandler(ctx context.Context, data map[string]any, as AuthServ
 	if err := mapstructure.Decode(data, &ud); err != nil {
 		return nil, err
 	}
-	u_data, err := as.UpdateUserData(ctx, ud.Login, ud.Data)
+	u_data, err := as.UpdateUserData(ctx, ud.Token, ud.Data)
 	if err != nil {
 		return nil, err
 	}
-	return map[string]any{"data": u_data}, nil
+	return map[string]any{"email": u_data}, nil
+}
+
+type getLoginByToken struct {
+	Token string `json:"token"`
+}
+
+func getLoginByTokenHandler(ctx context.Context, data map[string]any, as AuthServiceInterface) (map[string]any, error) {
+	var gbt getLoginByToken
+	if err := mapstructure.Decode(data, &gbt); err != nil {
+		return nil, err
+	}
+	login, err := as.GetLoginByToken(ctx, gbt.Token)
+	if err != nil {
+		return nil, err
+	}
+	return map[string]any{"login": login}, nil
 }
