@@ -3,6 +3,7 @@ package rest
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"gateway_service/internal/models"
 	"gateway_service/pkg/kafka"
@@ -97,7 +98,7 @@ func (s *Server) MakeAds(ctx echo.Context) error {
 	if !valid {
 		return nil
 	}
-
+	login := s.GetLogin(ctx.Request().Header.Get("Authorization"))
 	var data models.MakeAdsRequest
 	if err := ctx.Bind(&data); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
@@ -107,7 +108,7 @@ func (s *Server) MakeAds(ctx echo.Context) error {
 			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
 		}
 		id := uuid.New().String()
-		ch, err := s.repo.MakeAds(id, data.Name, data.Description, data.TypeOfFinding, data.Location)
+		ch, err := s.repo.MakeAds(login, id, data.Name, data.Description, data.TypeOfFinding, data.Location)
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
@@ -172,7 +173,11 @@ func (s *Server) ApplyAds(ctx echo.Context) error {
 				return ctx.String(http.StatusInternalServerError, err.Error())
 			}
 			_ = ctx.JSON(http.StatusOK, applyData)
-			//TODO notify
+			email := s.GetEmail(applyData.Login)
+			err = s.Notify(email)
+			if err != nil {
+				// TODO Log error
+			}
 			break
 		case <-time.After(5 * time.Second):
 			continue
@@ -302,6 +307,87 @@ func (s *Server) VerifyToken(ctx echo.Context) bool {
 	return true
 }
 
-func (s *Server) Notify(email string) bool {
-	//notify
+func (s *Server) Notify(email string) error {
+	for i := range 6 {
+		if i == 5 {
+			return errors.New("notify service failed")
+		}
+		id := uuid.New().String()
+		subject := ""
+		body := ""
+		ch, err := s.repo.NotifyUser(id, email, subject, body)
+		if err != nil {
+			return err
+		}
+		select {
+		case resp := <-ch:
+			var data models.KafkaResponse
+			_ = json.Unmarshal(resp, &data)
+			if data.Status != "success" {
+				continue
+			}
+			var tokData = data.Data
+			fmt.Println(tokData)
+			break
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
+	return nil
+}
+
+func (s *Server) GetEmail(login string) string {
+	for i := range 6 {
+		if i == 5 {
+			return ""
+		}
+		id := uuid.New().String()
+		ch, err := s.repo.GetEmail(id, login)
+		if err != nil {
+			return ""
+		}
+		select {
+		case resp := <-ch:
+			var data models.KafkaResponse
+			_ = json.Unmarshal(resp, &data)
+			if data.Status != "success" {
+				continue
+			}
+			var tokData models.GetEmailResponse
+			_ = json.Unmarshal([]byte(data.Data), &tokData)
+			email := tokData.Email
+			return email
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
+	return ""
+}
+
+func (s *Server) GetLogin(token string) string {
+	for i := range 6 {
+		if i == 5 {
+			return ""
+		}
+		id := uuid.New().String()
+		ch, err := s.repo.GetLogin(id, token)
+		if err != nil {
+			return ""
+		}
+		select {
+		case resp := <-ch:
+			var data models.KafkaResponse
+			_ = json.Unmarshal(resp, &data)
+			if data.Status != "success" {
+				continue
+			}
+			var tokData models.GetLoginResponse
+			_ = json.Unmarshal([]byte(data.Data), &tokData)
+			login := tokData.Login
+			return login
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
+	return ""
 }

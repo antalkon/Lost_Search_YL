@@ -35,3 +35,19 @@ type ValidateTokenRequest struct {
 type ValidateTokenResponse struct {
 	Valid bool `json:"valid"`
 }
+
+type GetLoginRequest struct {
+	Token string `json:"token"`
+}
+
+type GetLoginResponse struct {
+	Login string `json:"login"`
+}
+
+type GetEmailRequest struct {
+	Login string `json:"login"`
+}
+
+type GetEmailResponse struct {
+	Email string `json:"email"`
+}

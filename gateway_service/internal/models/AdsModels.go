@@ -42,7 +42,11 @@ type MakeAdsResponse struct {
 }
 
 type MakeAdsKafkaRequest struct {
-	Name string `json:"name"`
+	Login         string   `json:"login"`
+	Name          string   `json:"name"`
+	Description   string   `json:"description"`
+	TypeOfFinding string   `json:"type"`
+	Location      Location `json:"location"`
 }
 
 type MakeAdsKafkaResponse struct {
@@ -54,11 +58,11 @@ type ApplyRequest struct {
 }
 
 type ApplyResponse struct {
-	Uuid string `json:"uuid"`
+	Login string `json:"user_login"`
 }
 
 type ApplyKafkaRequest struct {
-	Uuid string `json:"uuid"`
+	Uuid string `json:"find_uuid"`
 }
 
 type ApplyKafkaResponse struct {
