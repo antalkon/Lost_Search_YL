@@ -123,7 +123,24 @@ func (as *AuthService) GetUserData(ctx context.Context, login string) (string, e
 }
 
 // обновление данных пользователя
-func (as *AuthService) UpdateUserData(ctx context.Context, login string, data string) (string, error) {
+var ErrInvalidToken = fmt.Errorf("invalid token")
+
+func (as *AuthService) UpdateUserData(ctx context.Context, tokenString string, data string) (string, error) {
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(as.Config.TokenSigningKey), nil
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	if !token.Valid {
+		return "", ErrInvalidToken
+	}
+
+	login := token.Claims.(jwt.MapClaims)["sub"].(string)
+
 	tmp, err := as.AuthRepo.GetUser(ctx, login)
 	if err != nil {
 		return "", err
