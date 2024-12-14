@@ -39,16 +39,14 @@ func (c *Consumer) Consume(ctx context.Context) error {
 			if err != nil {
 				log.Error(ctx, "error", zap.String("Logging error", err.Error()))
 			} else {
-				// TODO get uuid from msg
 				uuid := string(msg.Key)
-				ch, ok := c.requests.Read(msg.Value)
+				ch, ok := c.requests.Read(uuid)
 				if !ok {
 					continue
 				}
 				c.requests.Delete(uuid)
-				ch <- uuid
+				ch <- msg.Value
 			}
 		}
 	}
-
 }

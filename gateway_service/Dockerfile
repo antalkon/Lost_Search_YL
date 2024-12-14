@@ -8,12 +8,12 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -o order_service ./cmd/main/main.go
+RUN CGO_ENABLED=0 go build -o gateway_service ./cmd/main/main.go
 
 FROM alpine:latest
 
 RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /app/order_service /order_service
+COPY --from=builder /app/gateway_service /gateway_service
 
-CMD ["./order_service"]
+CMD ["./gateway_service"]
