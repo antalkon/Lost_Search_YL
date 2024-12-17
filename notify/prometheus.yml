@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s  # Интервал сбора метрик
+
+scrape_configs:
+  # Сбор метрик Prometheus самого себя
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Сбор метрик микросервиса Notify
+  - job_name: "notify_service"
+    static_configs:
+      - targets: ["localhost:8080"]
