@@ -20,23 +20,23 @@ func NewBrokerRepo(c context.Context, address string) *BrokerRepo {
 	repo := &BrokerRepo{requests: syncmap.NewSyncMap(), ctx: ctx, stop: cancel}
 	var producers = make(map[string]*Producer)
 	var err error
-	producers["Notify"], err = NewProducer(address, "NotifyRequest")
+	producers["Notify"], err = NewProducer(address, "notify_request")
 	if err != nil {
 		panic(err)
 	}
-	producers["Ads"], err = NewProducer(address, "AdsRequest")
+	producers["Ads"], err = NewProducer(address, "ads_request")
 	if err != nil {
 		panic(err)
 	}
-	producers["Auth"], err = NewProducer(address, "AuthRequest")
+	producers["Auth"], err = NewProducer(address, "auth_request")
 	if err != nil {
 		panic(err)
 	}
 	repo.producer = producers
 	var consumers = make(map[string]*Consumer)
-	consumers["Notify"] = NewConsumer(address, "Notify", "NotifyResponse", repo.requests) //make constants instead "Notify" ...etc
-	consumers["Ads"] = NewConsumer(address, "Ads", "AdsResponse", repo.requests)
-	consumers["Auth"] = NewConsumer(address, "Auth", "AuthResponse", repo.requests)
+	consumers["Notify"] = NewConsumer(address, "Notify", "notify_response", repo.requests) //make constants instead "Notify" ...etc
+	consumers["Ads"] = NewConsumer(address, "Ads", "ads_response", repo.requests)
+	consumers["Auth"] = NewConsumer(address, "Auth", "auth_response", repo.requests)
 	repo.consumer = consumers
 	for _, i := range repo.consumer {
 		go func() {

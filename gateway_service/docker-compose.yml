@@ -44,6 +44,33 @@ services:
     networks:
       - default
 
+  init-kafka:
+    image: confluentinc/cp-kafka:6.1.1
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:8080 --list
+      
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic notify_request --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic notify_response --replication-factor 1 --partitions 1
+      
+      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic ads_request --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic ads_response --replication-factor 1 --partitions 1
+      
+      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic auth_request --replication-factor 1 --partitions 1
+      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic auth_response --replication-factor 1 --partitions 1
+      
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:8080 --list
+      "
+    networks:
+      - default
+  
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus-container
