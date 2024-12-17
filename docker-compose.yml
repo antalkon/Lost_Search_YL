@@ -126,7 +126,7 @@ services:
       - default
 
   init-kafka:
-    image: confluentinc/cp-kafka:6.1.1
+    image: confluentinc/cp-kafka:7.4.1
     depends_on:
       - kafka
     entrypoint: [ '/bin/sh', '-c' ]
