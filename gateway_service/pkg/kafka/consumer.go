@@ -18,10 +18,9 @@ type Consumer struct {
 	requests *syncmap.SyncMap
 }
 
-func NewConsumer(address string, groupid string, topic string, requests *syncmap.SyncMap) *Consumer {
+func NewConsumer(address string, topic string, requests *syncmap.SyncMap) *Consumer {
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{address},
-		GroupID: groupid,
 		Topic:   topic,
 	})
 	return &Consumer{reader: r, requests: requests}

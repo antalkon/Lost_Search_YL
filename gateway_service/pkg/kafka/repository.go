@@ -34,9 +34,9 @@ func NewBrokerRepo(c context.Context, address string) *BrokerRepo {
 	}
 	repo.producer = producers
 	var consumers = make(map[string]*Consumer)
-	consumers["Notify"] = NewConsumer(address, "Notify", "notify_response", repo.requests) //make constants instead "Notify" ...etc
-	consumers["Ads"] = NewConsumer(address, "Ads", "ads_response", repo.requests)
-	consumers["Auth"] = NewConsumer(address, "Auth", "auth_response", repo.requests)
+	consumers["Notify"] = NewConsumer(address, "notify_response", repo.requests) //make constants instead "Notify" ...etc
+	consumers["Ads"] = NewConsumer(address, "ads_response", repo.requests)
+	consumers["Auth"] = NewConsumer(address, "auth_response", repo.requests)
 	repo.consumer = consumers
 	for _, i := range repo.consumer {
 		go func() {
