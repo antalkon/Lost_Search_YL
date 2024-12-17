@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  auth-service:
+    container_name: auth-service
+    build: .
+    ports:
+      - "${KAFKA_PORT}:${KAFKA_PORT}"
+    env_file:
+      - ./config/auth.env
+
+  postgres:
+    container_name: postgres
+    image: postgres
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  #TODO: редиска
+
+volumes:
+  postgres_data:
+  redis_data:
