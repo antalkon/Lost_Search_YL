@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "gateway"
+    static_configs:
+      - targets: ["gateway-service:7070"]
+  - job_name: "kafka"
+    static_configs:
+      - targets: ["kafka:8080"]
+  - job_name: "zookeeper"
+    static_configs:
+      - targets: ["zookeeper:2181"]
+
+
+  # Сбор метрик микросервиса Notify
+  - job_name: "notify_service"
+    static_configs:
+      - targets: [ "notify:8080" ]
