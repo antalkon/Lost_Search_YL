@@ -1,0 +1,90 @@
+services:
+  gateway-service:
+    build:
+      context: .
+    env_file:
+      - .env
+    environment:
+      - REST_PORT=${REST_PORT}
+      - KAFKA_PORT=${KAFKA_PORT}
+      - PROMETHEUS_PORT=${PROMETHEUS_PORT}
+    ports:
+      - "${REST_PORT}:${REST_PORT}"
+    depends_on:
+      kafka:
+        condition: service_started
+    networks:
+      - default
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - default
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.1
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_started
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:8080
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:8080
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 7071
+      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka -Dcom.sun.management.jmxremote.port=7071"
+    volumes:
+      - ./jmx-exporter-config.yml:/etc/jmx-exporter/config.yml
+    networks:
+      - default
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus-container
+    expose:
+      - 9090
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    depends_on:
+      gateway-service:
+        condition: service_started
+    networks:
+      - default
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
+
+
+
+  nginx:
+    image: nginx
+    container_name: nginx-container
+    ports:
+      - "80:80"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      gateway-service:
+        condition: service_started
+    networks:
+      - default
+
+networks:
+  default:
