@@ -92,7 +92,7 @@ services:
     ports:
       - "${REST_PORT}:${REST_PORT}"
     depends_on:
-      kafka:
+      init-kafka:
         condition: service_started
     networks:
       - default
