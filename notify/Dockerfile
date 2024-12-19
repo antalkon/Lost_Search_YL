@@ -1,19 +1,19 @@
-FROM golang:1.22 AS builder
+FROM golang:1.23 AS builder
+
 WORKDIR /app
 
 COPY go.mod go.sum ./
-RUN go mod tidy
+
+RUN go mod download
 
 COPY . .
-RUN go build -o notify-service ./cmd/app/main.go
 
-FROM gcr.io/distroless/base-debian11
-WORKDIR /app
+RUN CGO_ENABLED=0 go build -o notify_service ./cmd/app/main.go
 
-COPY --from=builder /app/notify-service /app/notify-service
+FROM alpine:latest
 
-COPY .env .env
-RUN ls -la .env || echo "File .env not found"
+RUN apk --no-cache add ca-certificates
 
-EXPOSE 8080
-CMD ["/app/notify-service"]
+COPY --from=builder /app/notify_service /notify_service
+
+CMD ["./notify_service"]

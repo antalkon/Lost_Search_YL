@@ -16,7 +16,7 @@ import (
 func main() {
 	//TODO: логи логи логи логи
 
-	cfg, err := config.ReadFromFile("config/auth.env")
+	cfg, err := config.ReadFromFile()
 
 	if err != nil {
 		panic(err)

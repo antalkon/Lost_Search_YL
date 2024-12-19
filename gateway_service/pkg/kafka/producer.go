@@ -2,6 +2,8 @@ package kafka
 
 import (
 	"context"
+	"fmt"
+	"gateway_service/pkg/logger"
 	"github.com/segmentio/kafka-go"
 )
 
@@ -22,6 +24,7 @@ func (p *Producer) SendMessage(ctx context.Context, uuid, msg string) error {
 		Key:   []byte(uuid),
 		Value: []byte(msg),
 	})
+	logger.GetLogger(ctx).Info(ctx, fmt.Sprintf("send msg key: %v  \n value: %v", uuid, msg))
 	if err != nil {
 		return err
 	}

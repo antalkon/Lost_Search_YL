@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"gateway_service/internal/models"
+	"gateway_service/pkg/logger"
 	"gateway_service/pkg/syncmap"
 )
 
@@ -17,20 +18,21 @@ type BrokerRepo struct {
 
 func NewBrokerRepo(c context.Context, address string) *BrokerRepo {
 	ctx, cancel := context.WithCancel(c)
+	lg := logger.GetLogger(ctx)
 	repo := &BrokerRepo{requests: syncmap.NewSyncMap(), ctx: ctx, stop: cancel}
 	var producers = make(map[string]*Producer)
 	var err error
 	producers["Notify"], err = NewProducer(address, "notify_request")
 	if err != nil {
-		panic(err)
+		lg.Error(ctx, err.Error())
 	}
 	producers["Ads"], err = NewProducer(address, "ads_request")
 	if err != nil {
-		panic(err)
+		lg.Error(ctx, err.Error())
 	}
 	producers["Auth"], err = NewProducer(address, "auth_request")
 	if err != nil {
-		panic(err)
+		lg.Error(ctx, err.Error())
 	}
 	repo.producer = producers
 	var consumers = make(map[string]*Consumer)
@@ -41,7 +43,7 @@ func NewBrokerRepo(c context.Context, address string) *BrokerRepo {
 	for _, i := range repo.consumer {
 		go func() {
 			if err = i.Consume(repo.ctx); err != nil {
-				panic(err)
+				lg.Error(ctx, err.Error())
 			}
 		}()
 	}
@@ -272,6 +274,7 @@ func (b *BrokerRepo) GetLogin(uuid, token string) (chan []byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return ch, nil
 }
 

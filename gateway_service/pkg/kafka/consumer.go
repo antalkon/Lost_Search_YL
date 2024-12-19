@@ -23,11 +23,13 @@ func NewConsumer(address string, topic string, requests *syncmap.SyncMap) *Consu
 		Brokers: []string{address},
 		Topic:   topic,
 	})
+
 	return &Consumer{reader: r, requests: requests}
 }
 
 func (c *Consumer) Consume(ctx context.Context) error {
 	log := logger.GetLogger(ctx)
+	log.Info(ctx, "Started consume")
 	for {
 		select {
 		case <-ctx.Done():

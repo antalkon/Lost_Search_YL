@@ -12,7 +12,6 @@ func NewKafkaConsumer(broker, topic string) *kafka.Reader {
 	return kafka.NewReader(kafka.ReaderConfig{
 		Brokers: []string{broker},
 		Topic:   topic,
-		GroupID: "notify-group",
 	})
 }
 

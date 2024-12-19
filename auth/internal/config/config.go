@@ -4,7 +4,7 @@ import (
 	"auth/internal/authservice"
 	"auth/internal/userrepo"
 
-	cleanenv "github.com/ilyakaznacheev/cleanenv"
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -16,9 +16,9 @@ type Config struct {
 	userrepo.AuthRepoConfig
 }
 
-func ReadFromFile(path string) (*Config, error) {
+func ReadFromFile() (*Config, error) {
 	var cfg Config
-	if err := cleanenv.ReadConfig(path, &cfg); err != nil {
+	if err := cleanenv.ReadEnv(&cfg); err != nil {
 		return nil, err
 	}
 	return &cfg, nil

@@ -8,9 +8,12 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o search_service ./cmd/app/main.go
+RUN CGO_ENABLED=0 go build -o search ./cmd/app/main.go
 
-EXPOSE 9090 8080
+FROM alpine:latest
 
+RUN apk --no-cache add ca-certificates
 
-CMD ["./search_service"]
+COPY --from=builder /app/search /search
+
+CMD ["./search"]
