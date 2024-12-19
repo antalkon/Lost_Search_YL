@@ -6,7 +6,7 @@ services:
     env_file:
       - ./auth/config/auth.env
     depends_on:
-      init-kafka:
+      kafka:
         condition: service_started
     networks:
       - default
@@ -98,7 +98,7 @@ services:
       - KAFKA_PORT=8080
       - PROMETHEUS_PORT=9090
     depends_on:
-      init-kafka:
+      kafka:
         condition: service_started
     networks:
       - default
@@ -115,12 +115,12 @@ services:
   kafka:
     image: confluentinc/cp-kafka:7.4.1
     container_name: kafka
+    hostname: kafka
     depends_on:
       zookeeper:
         condition: service_started
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_PORT: 8080
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:8080
