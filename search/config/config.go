@@ -6,14 +6,16 @@ import (
 
 	"github.com/joho/godotenv"
 	"gitlab.crja72.ru/gospec/go21/go_final_project/pkg/db/postgres"
+	"gitlab.crja72.ru/gospec/go21/go_final_project/pkg/db/redis"
 )
 
 type Config struct {
 	KafkaBroker          string
 	RequestsTopic        string
-	NotifyResponsesTopic string
+	SearchResponsesTopic string
 
-	postgres.Config
+	postgres.PostgresConfig
+	redis.RedisConfig
 }
 
 func LoadConfig() *Config {
@@ -24,7 +26,8 @@ func LoadConfig() *Config {
 	return &Config{
 		KafkaBroker:          os.Getenv("KAFKA_BROKER"),
 		RequestsTopic:        os.Getenv("KAFKA_REQUESTS_TOPIC"),
-		NotifyResponsesTopic: os.Getenv("KAFKA_NOTIFY_RESPONSES_TOPIC"), // Новое поле
-		Config:               postgres.LoadConfig(),
+		SearchResponsesTopic: os.Getenv("KAFKA_NOTIFY_RESPONSES_TOPIC"), // Новое поле
+		PostgresConfig:       postgres.LoadConfig(),
+		RedisConfig:          redis.LoadConfig(),
 	}
 }

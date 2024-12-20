@@ -17,6 +17,7 @@ const (
 const (
 	ActionAdd     string = "add"
 	ActionRespond string = "respond"
+	ActionGet     string = "get"
 )
 
 const (
@@ -35,7 +36,7 @@ func HandleRequest(writer kafka.KafkaWriter, repo repository.Repository, message
 	var (
 		req  Message
 		resp []byte
-		data map[string]any
+		data any
 		err  error
 	)
 
@@ -49,7 +50,9 @@ func HandleRequest(writer kafka.KafkaWriter, repo repository.Repository, message
 	case ActionAdd:
 		data, err = methods.HandleAdd(req.Data, repo)
 	case ActionRespond:
-		data, err = methods.HandleRespond(req.Data)
+		data, err = methods.HandleRespond(req.Data, repo)
+	case ActionGet:
+		data, err = methods.HandleGet(req.Data, repo)
 	}
 
 	resp, err = formResponse(req.RequestID, data, err)
@@ -71,7 +74,7 @@ func formRequest(msg []byte) (Message, error) {
 	return req, nil
 }
 
-func formResponse(reqID string, data map[string]any, err error) ([]byte, error) {
+func formResponse(reqID string, data any, err error) ([]byte, error) {
 	var status string
 	if err == nil {
 		status = StatusSuccess

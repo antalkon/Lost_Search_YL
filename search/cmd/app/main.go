@@ -18,8 +18,8 @@ func main() {
 
 	cfg := config.LoadConfig()
 
-	log.Println(cfg.DbName, cfg.Host, cfg.Port)
-	repo, err := repository.NewPostgresRepo(cfg.Config)
+	log.Printf("%+v\n", cfg.RedisConfig)
+	repo, err := repository.NewCachedRepo(cfg.PostgresConfig, cfg.RedisConfig)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -33,8 +33,32 @@ func main() {
 	consumer := kafka.NewKafkaConsumer(cfg.KafkaBroker, cfg.RequestsTopic)
 	defer consumer.Close()
 
-	writer := kafka.NewKafkaWriter(cfg.KafkaBroker, cfg.NotifyResponsesTopic)
+	writer := kafka.NewKafkaWriter(cfg.KafkaBroker, cfg.SearchResponsesTopic)
 	defer writer.Close()
+
+	// if _, err := repo.AddFind(repository.AddReqMok()); err != nil {
+	// 	log.Fatalln(err)
+	// }
+	if r, err := repo.RespondToFind(repository.RespondReq{FindUUID: "66fafbcd-d402-42d4-9301-194b3142e092"}); err != nil {
+		log.Fatalln(err)
+	} else {
+		log.Println(r)
+	}
+	t := "тел"
+	if r, err := repo.GetFind(repository.GetReq{Name: &t}); err != nil {
+		log.Fatalln(err)
+	} else {
+		for _, f := range r.Finds {
+			log.Println(f.Name, f.Type, f.Description, f.Location)
+		}
+	}
+	if r, err := repo.GetFind(repository.GetReq{Name: &t}); err != nil {
+		log.Fatalln(err)
+	} else {
+		for _, f := range r.Finds {
+			log.Println(f.Name, f.Type, f.Description, f.Location)
+		}
+	}
 
 	go func() {
 		err := kafka.ListenMessages(ctx, consumer, func(b []byte) error {

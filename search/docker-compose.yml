@@ -20,6 +20,7 @@ services:
       - "6060:6060"
     volumes:
       - redis_data:/data
+    command: ["redis-server", "--bind", "redis", "--port", "6060"]
 
   backend:
     build: .

@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-type Config struct {
+type PostgresConfig struct {
 	UserName string
 	Password string
 	Host     string
@@ -17,8 +17,8 @@ type Config struct {
 	DbName   string
 }
 
-func LoadConfig() Config {
-	return Config{
+func LoadConfig() PostgresConfig {
+	return PostgresConfig{
 		UserName: os.Getenv("POSTGRES_USER"),
 		Password: os.Getenv("POSTGRES_PASSWORD"),
 		Host:     os.Getenv("POSTGRES_HOST"),
@@ -27,7 +27,7 @@ func LoadConfig() Config {
 	}
 }
 
-func New(cfg Config) (*sqlx.DB, error) {
+func New(cfg PostgresConfig) (*sqlx.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", cfg.Host, cfg.Port, cfg.UserName, cfg.DbName, cfg.Password)
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {

@@ -4,19 +4,14 @@ import (
 	"fmt"
 
 	"github.com/mitchellh/mapstructure"
+	repo "gitlab.crja72.ru/gospec/go21/go_final_project/internal/repository"
 )
 
-type get struct {
-	Name     string   `json:"name"`
-	Type     string   `json:"type"`
-	Location []string `json:"location"`
-}
-
-func HandleGet(data map[string]any) (map[string]any, error) {
-	var g get
+func HandleGet(data map[string]any, rep repo.Repository) (repo.GetResp, error) {
+	var g repo.GetReq
 	if err := mapstructure.Decode(data, &g); err != nil {
-		return nil, fmt.Errorf("handle get: failed to parse message: %w", err)
+		return repo.GetResp{}, fmt.Errorf("handle get: failed to parse message: %w", err)
 	}
 	fmt.Println(g)
-	return map[string]any{}, nil
+	return rep.GetFind(g)
 }
