@@ -17,6 +17,7 @@ func NewKafkaConsumer(broker, topic string) *kafka.Reader {
 
 // ListenMessages читает сообщения из Kafka и передает их обработчику
 func ListenMessages(ctx context.Context, consumer *kafka.Reader, handler func([]byte) error) error {
+	log.Println("Consume started")
 	for {
 		select {
 		case <-ctx.Done():
@@ -24,6 +25,7 @@ func ListenMessages(ctx context.Context, consumer *kafka.Reader, handler func([]
 			return nil
 		default:
 			msg, err := consumer.ReadMessage(ctx)
+			log.Println("Consume message ", string(msg.Value))
 			if err != nil {
 				log.Printf("Error reading message: %v", err)
 				continue
@@ -34,4 +36,5 @@ func ListenMessages(ctx context.Context, consumer *kafka.Reader, handler func([]
 			}
 		}
 	}
+
 }

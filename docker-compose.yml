@@ -37,7 +37,7 @@ services:
     networks:
       - default
     depends_on:
-      init-kafka:
+      kafka:
         condition: service_completed_successfully
 
 
@@ -82,7 +82,7 @@ services:
     depends_on:
       - postgres-search
       - redis
-      - init-kafka
+      - kafka
 
 
   #gateway service
@@ -103,65 +103,18 @@ services:
     networks:
       - default
 
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.1
-    container_name: zookeeper
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-    networks:
-      - default
-
   kafka:
-    image: confluentinc/cp-kafka:7.4.1
-    container_name: kafka
-    hostname: kafka
-    depends_on:
-      zookeeper:
-        condition: service_started
+    image: 'bitnami/kafka:latest'
+    networks:
+      - default
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:8080
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:8080
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_JMX_PORT: 7071
-      KAFKA_JMX_OPTS: "-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.local.only=false -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka -Dcom.sun.management.jmxremote.port=7071"
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./jmx-exporter-config.yml:/etc/jmx-exporter/config.yml
-    networks:
-      - default
-
-  init-kafka:
-    image: confluentinc/cp-kafka:7.4.1
-    depends_on:
-      - kafka
-    entrypoint: [ '/bin/sh', '-c' ]
-    command: |
-      "
-      # blocks until kafka is reachable
-      kafka-topics --bootstrap-server kafka:8080 --list
-
-      echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic notify_request --replication-factor 1 --partitions 1
-      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic notify_response --replication-factor 1 --partitions 1
-
-      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic ads_request --replication-factor 1 --partitions 1
-      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic ads_response --replication-factor 1 --partitions 1
-
-      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic auth_request --replication-factor 1 --partitions 1
-      kafka-topics --bootstrap-server kafka:8080 --create --if-not-exists --topic auth_response --replication-factor 1 --partitions 1
-
-      echo -e 'Successfully created the following topics:'
-      kafka-topics --bootstrap-server kafka:8080 --list
-      "
-    networks:
-      - default
-
-
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:8080,CONTROLLER://:8081
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:8081
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
 
   prometheus:
     image: prom/prometheus:latest
