@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	KafkaBroker    string `env:"KAFKA_BROKER" env-default:"localhost:9092"`
-	RequestsTopic  string `env:"REQUESTS_TOPIC" env-default:"requests"`
+	RequestsTopic  string `env:"REQUESTS_TOPIC" env-default:"request"`
 	ResponsesTopic string `env:"RESPONSES_TOPIC" env-default:"responses"`
 
 	authservice.AuthServiceConfig

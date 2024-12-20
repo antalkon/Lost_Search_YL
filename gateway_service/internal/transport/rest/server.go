@@ -232,6 +232,7 @@ func (s *Server) Register(ctx echo.Context) error {
 	if err := ctx.Bind(&data); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
+
 	for i := range 6 {
 		if i == 5 {
 			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
