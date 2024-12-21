@@ -2,6 +2,9 @@ package gateway
 
 import (
 	"context"
+	"gateway_service/internal/transport/rest"
+	"gateway_service/pkg/metrics"
+	"github.com/labstack/echo/v4"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -17,23 +20,28 @@ type MetricsServer interface {
 }
 
 type Server struct {
-	restServer    RestServer
-	metricsServer MetricsServer
+	restServer    rest.Server
+	metricsServer metrics.PrometheusServer
 }
 
-func NewServer(restSrv RestServer, metricSrv MetricsServer) *Server {
+func NewServer(restSrv rest.Server, metricSrv metrics.PrometheusServer) *Server {
 	return &Server{restServer: restSrv, metricsServer: metricSrv}
 }
 
 func (s *Server) Start(ctx context.Context) error {
 	eg := errgroup.Group{}
+	f := func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			s.metricsServer.NewRequest()
+			return next(c)
+		}
+	}
 	eg.Go(func() error {
-		return s.restServer.Start(ctx)
+		return s.restServer.Start(ctx, f)
 	})
 	eg.Go(func() error {
 		return s.metricsServer.Start(ctx)
 	})
-
 	return eg.Wait()
 }
 

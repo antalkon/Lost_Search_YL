@@ -27,14 +27,15 @@ func New(ctx context.Context, serverPort int, repo *kafka.BrokerRepo) (*Server, 
 	return &Server{serverPort: serverPort, serv: e, repo: repo, ctx: ctx}, nil
 }
 
-func (s *Server) Start(ctx context.Context) error {
+func (s *Server) Start(ctx context.Context, f func(next echo.HandlerFunc) echo.HandlerFunc) error {
 	log := logger.GetLogger(ctx)
-	s.serv.GET("/v1/api/SearchAds", s.SearchAds)
-	s.serv.POST("/v1/api/MakeAds", s.MakeAds)
-	s.serv.POST("/v1/api/ApplyAds", s.ApplyAds)
-	s.serv.POST("/v1/api/Login", s.Login)
-	s.serv.POST("/v1/api/Register", s.Register)
+	s.serv.GET("/v1/api/SearchAds", f(s.SearchAds))
+	s.serv.POST("/v1/api/MakeAds", f(s.MakeAds))
+	s.serv.POST("/v1/api/ApplyAds", f(s.ApplyAds))
+	s.serv.POST("/v1/api/Login", f(s.Login))
+	s.serv.POST("/v1/api/Register", f(s.Register))
 	err := s.serv.Start(fmt.Sprintf(":%d", s.serverPort))
+
 	if err != nil {
 		return err
 	}
