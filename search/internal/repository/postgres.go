@@ -153,7 +153,7 @@ func (r *PostgresRepo) GetFind(req GetReq) (GetResp, error) {
 
 	var selectFind string = fmt.Sprintf(
 		`
-	SELECT * FROM finds LEFT JOIN locations ON finds.location_id = locations.id %s;
+	SELECT finds.id, finds.location_id, finds.name, finds.description, finds.type, locations.country, locations.city, locations.district  FROM finds LEFT JOIN locations ON finds.location_id = locations.id %s;
 	`,
 		getCondition(req),
 	)
