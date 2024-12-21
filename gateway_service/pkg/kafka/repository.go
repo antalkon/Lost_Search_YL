@@ -145,17 +145,13 @@ func (b *BrokerRepo) Register(uuid string, login, password, email string) (chan 
 		Password: password,
 		Email:    email,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
-		Service:   "Auth",
+		Service:   "auth",
 		Action:    "create_user",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +175,7 @@ func (b *BrokerRepo) Login(uuid string, login, password string) (chan []byte, er
 	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
-		Service:   "Auth",
+		Service:   "auth",
 		Action:    "login_user",
 		Data:      string(data),
 	}
@@ -200,17 +196,13 @@ func (b *BrokerRepo) ValidateToken(uuid string, token string) (chan []byte, erro
 	req := models.ValidateTokenRequest{
 		Token: token,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
-		Service:   "Auth",
+		Service:   "auth",
 		Action:    "validate_token",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}
@@ -229,17 +221,13 @@ func (b *BrokerRepo) NotifyUser(uuid string, email, subject, body string) (chan 
 		Subject: subject,
 		Body:    body,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
 		Service:   "Notify",
 		Action:    "send_email",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}
@@ -256,17 +244,13 @@ func (b *BrokerRepo) GetLogin(uuid, token string) (chan []byte, error) {
 	req := models.GetLoginRequest{
 		Token: token,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
-		Service:   "Auth",
+		Service:   "auth",
 		Action:    "get_login_by_token",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}
@@ -284,17 +268,13 @@ func (b *BrokerRepo) GetEmail(uuid, login string) (chan []byte, error) {
 	req := models.GetEmailRequest{
 		Login: login,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
-		Service:   "Auth",
+		Service:   "auth",
 		Action:    "get_user_data",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}
@@ -303,10 +283,6 @@ func (b *BrokerRepo) GetEmail(uuid, login string) (chan []byte, error) {
 		return nil, err
 	}
 	return ch, nil
-}
-
-func (b *BrokerRepo) DeleteChan(uuid string) {
-	b.requests.Delete(uuid)
 }
 
 func (b *BrokerRepo) Stop() {

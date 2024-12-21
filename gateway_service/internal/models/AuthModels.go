@@ -4,7 +4,7 @@ package models
 type RegisterRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
-	Email    string `json:"data"`
+	Email    string `json:"email"`
 }
 
 type RegisterKafkaResponse struct {

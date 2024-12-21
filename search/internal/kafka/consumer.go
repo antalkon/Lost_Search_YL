@@ -25,6 +25,7 @@ func ListenMessages(ctx context.Context, consumer *kafka.Reader, handler func([]
 			return nil
 		default:
 			msg, err := consumer.ReadMessage(ctx)
+			log.Printf("New message %v", msg)
 			if err != nil {
 				log.Printf("Error reading message: %v", err)
 				continue

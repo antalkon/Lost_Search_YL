@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -18,11 +19,12 @@ type Server struct {
 	serverPort int
 	serv       *echo.Echo
 	repo       *kafka.BrokerRepo
+	ctx        context.Context
 }
 
 func New(ctx context.Context, serverPort int, repo *kafka.BrokerRepo) (*Server, error) {
 	e := echo.New()
-	return &Server{serverPort: serverPort, serv: e, repo: repo}, nil
+	return &Server{serverPort: serverPort, serv: e, repo: repo, ctx: ctx}, nil
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -61,7 +63,7 @@ func (s *Server) SearchAds(ctx echo.Context) error {
 	}
 	for i := range 6 {
 		if i == 5 {
-			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
+			return ctx.String(http.StatusUnauthorized, "Search Service Unavailable")
 		}
 		id := uuid.New().String()
 		ch, err := s.repo.SearchAds(id, data.Name, data.TypeOfFinding, data.Location)
@@ -79,15 +81,22 @@ func (s *Server) SearchAds(ctx echo.Context) error {
 			if respData.Status != "success" {
 				continue
 			}
-			searchData := models.SearchResponse{
-				Finds: respData.Data.([]models.Finding),
-			}
+			var searchData models.SearchKafkaResponse
+			searchData.Name = respData.Data.(map[string]any)["name"].(string)
+			searchData.Type = respData.Data.(map[string]any)["type"].(string)
+			searchData.Description = respData.Data.(map[string]any)["Description"].(string)
+			searchData.Uuid = respData.Data.(map[string]any)["uuid"].(string)
 
-			if err != nil {
-				return ctx.String(http.StatusInternalServerError, err.Error())
-			}
+			var Loc models.Location
+
+			Loc.City = respData.Data.(map[string]any)["location"].(map[string]any)["city"].(string)
+			Loc.Country = respData.Data.(map[string]any)["location"].(map[string]any)["country"].(string)
+			Loc.District = respData.Data.(map[string]any)["location"].(map[string]any)["district"].(string)
+
+			searchData.Location = Loc
+
 			_ = ctx.JSON(http.StatusOK, searchData)
-			break
+			return nil
 		case <-time.After(5 * time.Second):
 			continue
 		}
@@ -107,7 +116,7 @@ func (s *Server) MakeAds(ctx echo.Context) error {
 	}
 	for i := range 6 {
 		if i == 5 {
-			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
+			return ctx.String(http.StatusUnauthorized, "Search Service Unavailable")
 		}
 		id := uuid.New().String()
 		ch, err := s.repo.MakeAds(login, id, data.Name, data.Description, data.TypeOfFinding, data.Location)
@@ -126,12 +135,12 @@ func (s *Server) MakeAds(ctx echo.Context) error {
 				continue
 			}
 			var makeData models.MakeAdsResponse
-			err = json.Unmarshal([]byte(respData.Data), &makeData)
+			makeData.Uuid = respData.Data.(map[string]any)["uuid"].(string)
 			if err != nil {
 				return ctx.String(http.StatusInternalServerError, err.Error())
 			}
 			_ = ctx.JSON(http.StatusOK, makeData)
-			break
+			return nil
 		case <-time.After(5 * time.Second):
 			continue
 		}
@@ -151,7 +160,7 @@ func (s *Server) ApplyAds(ctx echo.Context) error {
 	}
 	for i := range 6 {
 		if i == 5 {
-			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
+			return ctx.String(http.StatusUnauthorized, "Search Service Unavailable")
 		}
 		id := uuid.New().String()
 		ch, err := s.repo.ApplyAds(id, data.Uuid)
@@ -170,17 +179,14 @@ func (s *Server) ApplyAds(ctx echo.Context) error {
 				continue
 			}
 			var applyData models.ApplyResponse
-			err = json.Unmarshal([]byte(respData.Data), &applyData)
-			if err != nil {
-				return ctx.String(http.StatusInternalServerError, err.Error())
-			}
+			applyData.Login = respData.Data.(map[string]any)["login"].(string)
 			_ = ctx.JSON(http.StatusOK, applyData)
 			email := s.GetEmail(applyData.Login)
 			err = s.Notify(email)
 			if err != nil {
 				// TODO Log error
 			}
-			break
+			return nil
 		case <-time.After(5 * time.Second):
 			continue
 		}
@@ -214,13 +220,10 @@ func (s *Server) Login(ctx echo.Context) error {
 				continue
 			}
 			var loginData models.LoginKafkaResponse
-			err = json.Unmarshal([]byte(respData.Data), &loginData)
-			if err != nil {
-				return ctx.String(http.StatusInternalServerError, err.Error())
-			}
+			loginData.Token = respData.Data.(map[string]any)["token"].(string)
 			ctx.Response().Header().Add("Authorization", "Bearer "+loginData.Token)
 			_ = ctx.JSON(http.StatusOK, models.LoginResponse{Success: true})
-			break
+			return nil
 
 		case <-time.After(5 * time.Second):
 			continue
@@ -234,13 +237,14 @@ func (s *Server) Register(ctx echo.Context) error {
 	if err := ctx.Bind(&data); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err)
 	}
-
+	logger.GetLogger(s.ctx).Info(s.ctx, fmt.Sprintf("send req"))
 	for i := range 6 {
 		if i == 5 {
 			return ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
 		}
 		id := uuid.New().String()
 		ch, err := s.repo.Register(id, data.Login, data.Password, data.Email)
+
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, err.Error())
 		}
@@ -249,6 +253,7 @@ func (s *Server) Register(ctx echo.Context) error {
 		case response := <-ch:
 			var respData models.KafkaResponse
 			err = json.Unmarshal(response, &respData)
+			logger.GetLogger(s.ctx).Info(s.ctx, fmt.Sprintf("got answer %+v", respData))
 			if err != nil {
 				return ctx.String(http.StatusBadGateway, err.Error())
 			}
@@ -256,13 +261,10 @@ func (s *Server) Register(ctx echo.Context) error {
 				continue
 			}
 			var regData models.RegisterKafkaResponse
-			err = json.Unmarshal([]byte(respData.Data), &regData)
-			if err != nil {
-				return ctx.String(http.StatusInternalServerError, err.Error())
-			}
+			regData.Token = respData.Data.(map[string]any)["token"].(string)
 			ctx.Response().Header().Add("Authorization", "Bearer "+regData.Token)
 			_ = ctx.JSON(http.StatusOK, models.RegisterResponse{Success: true})
-			break
+			return nil
 		case <-time.After(5 * time.Second):
 			continue
 		}
@@ -276,7 +278,7 @@ func (s *Server) VerifyToken(ctx echo.Context) bool {
 		_ = ctx.String(http.StatusUnauthorized, "Authorization header required")
 		return false
 	}
-	// Validate Token
+	token = strings.TrimPrefix(token, "Bearer ")
 	for i := range 6 {
 		if i == 5 {
 			_ = ctx.String(http.StatusUnauthorized, "Auth Service Unavailable")
@@ -296,13 +298,13 @@ func (s *Server) VerifyToken(ctx echo.Context) bool {
 				continue
 			}
 			var tokData models.ValidateTokenResponse
-			_ = json.Unmarshal([]byte(data.Data), &tokData)
+			tokData.Valid = data.Data.(map[string]any)["valid"].(bool)
 			valid := tokData.Valid
 			if !valid {
 				_ = ctx.String(http.StatusUnauthorized, "Invalid token")
 				return false
 			}
-			break
+			return true
 		case <-time.After(5 * time.Second):
 			continue
 		}
@@ -331,7 +333,7 @@ func (s *Server) Notify(email string) error {
 			}
 			var tokData = data.Data
 			fmt.Println(tokData)
-			break
+			return nil
 		case <-time.After(5 * time.Second):
 			continue
 		}
@@ -357,7 +359,7 @@ func (s *Server) GetEmail(login string) string {
 				continue
 			}
 			var tokData models.GetEmailResponse
-			_ = json.Unmarshal([]byte(data.Data), &tokData)
+			tokData.Email = data.Data.(map[string]any)["email"].(string)
 			email := tokData.Email
 			return email
 		case <-time.After(5 * time.Second):
@@ -373,6 +375,7 @@ func (s *Server) GetLogin(token string) string {
 			return ""
 		}
 		id := uuid.New().String()
+		token = strings.TrimPrefix(token, "Bearer ")
 		ch, err := s.repo.GetLogin(id, token)
 		if err != nil {
 			return ""
@@ -385,7 +388,7 @@ func (s *Server) GetLogin(token string) string {
 				continue
 			}
 			var tokData models.GetLoginResponse
-			_ = json.Unmarshal([]byte(data.Data), &tokData)
+			tokData.Login = data.Data.(map[string]any)["login"].(string)
 			login := tokData.Login
 			return login
 		case <-time.After(5 * time.Second):

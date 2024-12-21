@@ -11,6 +11,6 @@ type KafkaRequest struct {
 type KafkaResponse struct {
 	RequestId string      `json:"request_id"`
 	Service   string      `json:"service"`
-	Status    string      `json:"action"`
+	Status    string      `json:"status"`
 	Data      interface{} `json:"data"`
 }
