@@ -33,9 +33,9 @@ type AddResp struct {
 }
 
 type GetReq struct {
-	Name     *string   `json:"name"`
-	Type     *string   `json:"type"`
-	Location *location `json:"location"`
+	Name     string   `json:"name"`
+	Type     string   `json:"type"`
+	Location location `json:"location"`
 }
 
 type GetResp struct {

@@ -36,6 +36,5 @@ func New(cfg RedisConfig) (*redis.Client, error) {
 		fmt.Printf("failed to connect to redis server: %s\n", err.Error())
 		return nil, err
 	}
-
 	return db, nil
 }

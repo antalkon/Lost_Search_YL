@@ -19,7 +19,7 @@ type Finding struct {
 }
 
 type SearchResponse struct {
-	Finds []Finding `json:"finds"`
+	Finds []SearchKafkaResponse `json:"finds"`
 }
 
 type SearchKafkaResponse struct {
@@ -59,6 +59,7 @@ type ApplyRequest struct {
 
 type ApplyResponse struct {
 	Login string `json:"user_login"`
+	Email string `json:"email"`
 }
 
 type ApplyKafkaRequest struct {

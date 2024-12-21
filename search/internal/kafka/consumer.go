@@ -24,6 +24,7 @@ func ListenMessages(ctx context.Context, consumer *kafka.Reader, handler func([]
 			log.Println("Stopping Kafka Consumer...")
 			return nil
 		default:
+			log.Println("read")
 			msg, err := consumer.ReadMessage(ctx)
 			log.Printf("New message %v", msg)
 			if err != nil {

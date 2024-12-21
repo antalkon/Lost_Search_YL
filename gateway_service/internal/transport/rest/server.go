@@ -81,21 +81,29 @@ func (s *Server) SearchAds(ctx echo.Context) error {
 			if respData.Status != "success" {
 				continue
 			}
-			var searchData models.SearchKafkaResponse
-			searchData.Name = respData.Data.(map[string]any)["name"].(string)
-			searchData.Type = respData.Data.(map[string]any)["type"].(string)
-			searchData.Description = respData.Data.(map[string]any)["Description"].(string)
-			searchData.Uuid = respData.Data.(map[string]any)["uuid"].(string)
+			var searchResp models.SearchResponse
+			var finds []models.SearchKafkaResponse
+			d := respData.Data.(map[string]any)["finds"].([]interface{})
+			logger.GetLogger(s.ctx).Info(s.ctx, fmt.Sprintf("found %+v", d))
+			for _, v := range d {
+				var searchData models.SearchKafkaResponse
+				searchData.Name = v.(map[string]any)["name"].(string)
+				searchData.Type = v.(map[string]any)["type"].(string)
+				searchData.Description = v.(map[string]any)["description"].(string)
+				searchData.Uuid = v.(map[string]any)["uuid"].(string)
+				var Loc models.Location
+				logger.GetLogger(s.ctx).Info(s.ctx, fmt.Sprintf("name type desc and uuid here %v", v.(map[string]any)))
+				Loc.City = respData.Data.(map[string]any)["location"].(map[string]any)["city"].(string)
+				Loc.Country = respData.Data.(map[string]any)["location"].(map[string]any)["country"].(string)
+				Loc.District = respData.Data.(map[string]any)["location"].(map[string]any)["district"].(string)
 
-			var Loc models.Location
+				searchData.Location = Loc
 
-			Loc.City = respData.Data.(map[string]any)["location"].(map[string]any)["city"].(string)
-			Loc.Country = respData.Data.(map[string]any)["location"].(map[string]any)["country"].(string)
-			Loc.District = respData.Data.(map[string]any)["location"].(map[string]any)["district"].(string)
+				finds = append(finds, searchData)
+			}
+			searchResp.Finds = finds
 
-			searchData.Location = Loc
-
-			_ = ctx.JSON(http.StatusOK, searchData)
+			_ = ctx.JSON(http.StatusOK, searchResp)
 			return nil
 		case <-time.After(5 * time.Second):
 			continue
@@ -135,7 +143,8 @@ func (s *Server) MakeAds(ctx echo.Context) error {
 				continue
 			}
 			var makeData models.MakeAdsResponse
-			makeData.Uuid = respData.Data.(map[string]any)["uuid"].(string)
+			logger.GetLogger(s.ctx).Info(s.ctx, fmt.Sprintf("msg: %v)", string(response)))
+			makeData.Uuid = respData.Data.(map[string]any)["find_uuid"].(string)
 			if err != nil {
 				return ctx.String(http.StatusInternalServerError, err.Error())
 			}
@@ -179,10 +188,12 @@ func (s *Server) ApplyAds(ctx echo.Context) error {
 				continue
 			}
 			var applyData models.ApplyResponse
-			applyData.Login = respData.Data.(map[string]any)["login"].(string)
-			_ = ctx.JSON(http.StatusOK, applyData)
+			applyData.Login = respData.Data.(map[string]any)["user_login"].(string)
+
 			email := s.GetEmail(applyData.Login)
 			err = s.Notify(email)
+			applyData.Email = email
+			_ = ctx.JSON(http.StatusOK, applyData)
 			if err != nil {
 				// TODO Log error
 			}
@@ -224,7 +235,6 @@ func (s *Server) Login(ctx echo.Context) error {
 			ctx.Response().Header().Add("Authorization", "Bearer "+loginData.Token)
 			_ = ctx.JSON(http.StatusOK, models.LoginResponse{Success: true})
 			return nil
-
 		case <-time.After(5 * time.Second):
 			continue
 		}
@@ -390,6 +400,9 @@ func (s *Server) GetLogin(token string) string {
 			var tokData models.GetLoginResponse
 			tokData.Login = data.Data.(map[string]any)["login"].(string)
 			login := tokData.Login
+			logger.GetLogger(s.ctx).Info(s.ctx, fmt.Sprintf("got answer %+v", resp))
+			logger.GetLogger(s.ctx).Info(s.ctx, fmt.Sprintf("got login %+v", login))
+
 			return login
 		case <-time.After(5 * time.Second):
 			continue

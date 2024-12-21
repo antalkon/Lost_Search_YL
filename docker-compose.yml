@@ -52,16 +52,21 @@ services:
       - POSTGRES_PORT=5432
     volumes:
       - postgres_search_data:/var/lib/postgresql/data
+    networks:
+      - default
 
     restart: on-failure
 
   redis:
     image: redis:7
     container_name: redis_container
-    environment:
-      REDIS_PORT: 6060
+    ports:
+      - "6060:6060"
     volumes:
       - redis_data:/data
+    command: ["redis-server", "--bind", "redis", "--port", "6060"]
+    networks:
+      - default
 
   search:
     build: ./search
@@ -77,13 +82,12 @@ services:
       - KAFKA_REQUESTS_TOPIC=ads_request
       - KAFKA_NOTIFY_RESPONSES_TOPIC=ads_response
       - NOTIFY_SERVICE_NAME=search
-
-
     depends_on:
       - postgres-search
       - redis
       - kafka1
-
+    networks:
+      - default
 
   #gateway service
 

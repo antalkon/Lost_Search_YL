@@ -7,7 +7,7 @@ scrape_configs:
       - targets: ["gateway-service:7070"]
   - job_name: "kafka"
     static_configs:
-      - targets: ["kafka:8080"]
+      - targets: ["kafka:9999"]
   - job_name: "zookeeper"
     static_configs:
       - targets: ["zookeeper:2181"]

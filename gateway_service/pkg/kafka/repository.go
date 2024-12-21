@@ -58,17 +58,13 @@ func (b *BrokerRepo) SearchAds(uuid string, name string, typ string, location mo
 		TypeOfFinding: typ,
 		Location:      location,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
-		Service:   "Ads",
+		Service:   "search",
 		Action:    "get",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}
@@ -89,17 +85,13 @@ func (b *BrokerRepo) MakeAds(login, uuid, name, description, typ string, geo mod
 		TypeOfFinding: typ,
 		Location:      geo,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
-		Service:   "Ads",
+		Service:   "search",
 		Action:    "add",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}
@@ -116,17 +108,13 @@ func (b *BrokerRepo) ApplyAds(uuid string, findUuid string) (chan []byte, error)
 	req := models.ApplyKafkaRequest{
 		Uuid: findUuid,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
-		Service:   "Ads",
+		Service:   "search",
 		Action:    "respond",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}
@@ -169,17 +157,13 @@ func (b *BrokerRepo) Login(uuid string, login, password string) (chan []byte, er
 		Login:    login,
 		Password: password,
 	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
 	kafkaReq := models.KafkaRequest{
 		RequestId: uuid,
 		Service:   "auth",
 		Action:    "login_user",
-		Data:      string(data),
+		Data:      req,
 	}
-	data, err = json.Marshal(kafkaReq)
+	data, err := json.Marshal(kafkaReq)
 	if err != nil {
 		return nil, err
 	}

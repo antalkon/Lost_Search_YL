@@ -171,13 +171,13 @@ func (r *PostgresRepo) GetFind(req GetReq) (GetResp, error) {
 
 func getCondition(req GetReq) string {
 	conds := make([]string, 0, 3)
-	if req.Name != nil {
-		conds = append(conds, fmt.Sprintf("finds.name LIKE '%s%%'", *req.Name))
+	if req.Name != "" {
+		conds = append(conds, fmt.Sprintf("finds.name LIKE '%s%%'", req.Name))
 	}
-	if req.Type != nil {
-		conds = append(conds, fmt.Sprintf("finds.type LIKE '%s%%'", *req.Type))
+	if req.Type != "" {
+		conds = append(conds, fmt.Sprintf("finds.type LIKE '%s%%'", req.Type))
 	}
-	if req.Location != nil {
+	if req.Location.Country != "" {
 		conds = append(conds, fmt.Sprintf("locations.country LIKE '%s%%' AND locations.city LIKE '%s%%' AND locations.district LIKE '%s%%'", req.Location.Country, req.Location.City, req.Location.District))
 	}
 	if len(conds) == 0 {
