@@ -79,8 +79,10 @@ func (s *Server) SearchAds(ctx echo.Context) error {
 			if respData.Status != "success" {
 				continue
 			}
-			var searchData models.SearchResponse
-			err = json.Unmarshal([]byte(respData.Data), &searchData)
+			searchData := models.SearchResponse{
+				Finds: respData.Data.([]models.Finding),
+			}
+
 			if err != nil {
 				return ctx.String(http.StatusInternalServerError, err.Error())
 			}

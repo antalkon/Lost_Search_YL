@@ -73,7 +73,7 @@ services:
       - POSTGRES_DB=postgres
       - REDIS_HOST=redis
       - REDIS_PORT=6060
-      - KAFKA_BROKER=kafka1:9092
+      - KAFKA_BROKER=kafka1:19092
       - KAFKA_REQUESTS_TOPIC=ads_request
       - KAFKA_NOTIFY_RESPONSES_TOPIC=ads_response
       - NOTIFY_SERVICE_NAME=search
