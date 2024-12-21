@@ -145,8 +145,8 @@ func (r *PostgresRepo) RespondToFind(req RespondReq) (RespondResp, error) {
 func (r *PostgresRepo) GetFind(req GetReq) (GetResp, error) {
 	var (
 		// row   *sql.Row
-		dests []dest   = []dest{}
-		finds []AddReq = []AddReq{}
+		dests []dest            = []dest{}
+		finds []GetResponseFind = []GetResponseFind{}
 	)
 
 	// conds := make([]string, 0, 3)
@@ -162,8 +162,10 @@ func (r *PostgresRepo) GetFind(req GetReq) (GetResp, error) {
 	}
 
 	for _, v := range dests {
-		r := v.AddReq
+		r := GetResponseFind{}
+		r.AddReq = v.AddReq
 		r.Location = location{Country: v.Country, City: v.City, District: v.District}
+		r.FindUUID = v.Id
 		finds = append(finds, r)
 	}
 	return GetResp{Finds: finds}, nil

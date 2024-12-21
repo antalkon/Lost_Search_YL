@@ -38,8 +38,13 @@ type GetReq struct {
 	Location location `json:"location"`
 }
 
+type GetResponseFind struct {
+	AddReq
+	FindUUID string `json:"id" db:"id"`
+}
+
 type GetResp struct {
-	Finds []AddReq `json:"finds"`
+	Finds []GetResponseFind `json:"finds"`
 }
 
 type RespondReq struct {

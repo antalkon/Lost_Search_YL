@@ -41,6 +41,14 @@ func main() {
 	// 	log.Fatalln(err)
 	// }
 
+	// repo.AddFind(repository.AddReqMok())
+	resp, err := repo.GetFind(repository.GetReq{Name: "тел"})
+	if err != nil {
+		log.Fatal(err)
+	} else {
+		log.Println(resp.Finds[0].FindUUID)
+	}
+
 	go func() {
 		err := kafka.ListenMessages(ctx, consumer, func(b []byte) error {
 			log.Infof("received message: %s", string(b))
