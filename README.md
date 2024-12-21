@@ -82,18 +82,53 @@ Register:
 {
   "login": "",
   "password": "",
-  "email": "",
+  "email": ""
 }
 ```
 
-### **Выходные сообщения (Kafka топик: `*_responses`)**
-
-Формат JSON:
+Login:
 
 ```json
 {
-  "request_id": "12345",
-  "status": "success",
-  "data": {}
+  "login": "",
+  "password": ""
+}
+```
+
+MakeAds:
+
+```json
+{
+  "name": "",
+  "description": "",
+  "type": "",
+  "location": {
+    "country": "",
+    "city": "",
+    "district": ""
+  }
+}
+```
+
+SearchAds:
+
+```json
+{
+  "name": "",        //необязательно
+  "description": "", //необязательно
+  "type": "",       //необязательно
+  "location": {
+    "country": "",   //необязательно
+    "city": "",    //необязательно
+    "district": "" //необязательно
+  }
+}
+```
+
+ApplyAds:
+
+```json
+{
+  "uuid": ""
 }
 ```

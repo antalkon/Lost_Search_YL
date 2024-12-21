@@ -156,7 +156,8 @@ services:
       - zoo1
     networks:
       - default
-
+    volumes:
+      - ./jmx-exporter-config.yml:/etc/jmx-exporter/config.yml
 
 
   prometheus:

@@ -90,12 +90,12 @@ func (s *Server) SearchAds(ctx echo.Context) error {
 				searchData.Name = v.(map[string]any)["name"].(string)
 				searchData.Type = v.(map[string]any)["type"].(string)
 				searchData.Description = v.(map[string]any)["description"].(string)
-				searchData.Uuid = v.(map[string]any)["uuid"].(string)
+				searchData.Uuid = v.(map[string]any)["id"].(string)
 				var Loc models.Location
 				logger.GetLogger(s.ctx).Info(s.ctx, fmt.Sprintf("name type desc and uuid here %v", v.(map[string]any)))
-				Loc.City = respData.Data.(map[string]any)["location"].(map[string]any)["city"].(string)
-				Loc.Country = respData.Data.(map[string]any)["location"].(map[string]any)["country"].(string)
-				Loc.District = respData.Data.(map[string]any)["location"].(map[string]any)["district"].(string)
+				Loc.City = v.(map[string]any)["location"].(map[string]any)["city"].(string)
+				Loc.Country = v.(map[string]any)["location"].(map[string]any)["country"].(string)
+				Loc.District = v.(map[string]any)["location"].(map[string]any)["district"].(string)
 
 				searchData.Location = Loc
 
